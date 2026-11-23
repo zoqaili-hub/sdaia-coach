@@ -165,8 +165,8 @@ body.m-ar .qtext.en{display:none}
     <button class="tab" role="tab" data-tab="learn">المذاكرة</button>
     <button class="tab" role="tab" data-tab="cards">بطاقات المصطلحات</button>
     <button class="tab" role="tab" data-tab="quiz">الاختبارات</button>
-    <button class="tab" role="tab" data-tab="keys">استراتيجيات الحل</button>
-    <button class="tab" role="tab" data-tab="exam">استراتيجية الاختبار</button>
+    <button class="tab" role="tab" data-tab="keys">مهارات الإجابة</button>
+    <button class="tab" role="tab" data-tab="exam">المرجع السريع</button>
     <div class="langs" role="group" aria-label="لغة العرض">
       <button data-m="both" aria-pressed="true">عربي + EN</button>
       <button data-m="ar" aria-pressed="false">عربي</button>
@@ -550,7 +550,7 @@ G.push(
 );
 
 var PLAN=[
- ['2026-11-23','الإثنين','23','نوفمبر',[['Zero-to-hero primer (6 cards) + read the exam strategy tab','البدء من الصفر (6 بطاقات) وقراءة تبويب استراتيجية الاختبار'],['Skim all 7 domain titles and weights','مرور سريع على المحاور السبعة وأوزانها'],['Warm-up quiz “تمهيدي سريع” (20 questions)','اختبار تمهيدي سريع (20 سؤالًا) لتثبيت المفاتيح']]],
+ ['2026-11-23','الإثنين','23','نوفمبر',[['Zero-to-hero primer (6 cards) + read the Quick reference tab','البدء من الصفر (6 بطاقات) وقراءة تبويب المرجع السريع'],['Skim all 7 domain titles and weights','مرور سريع على المحاور السبعة وأوزانها'],['Warm-up quiz “تمهيدي سريع” (20 questions)','اختبار تمهيدي سريع (20 سؤالًا) لتثبيت المفاتيح']]],
  ['2026-11-24','الثلاثاء','24','نوفمبر',[['D1 lessons 1 and 2: data quality, splitting, leakage, imbalance','D1 الدرسان 1 و2: جودة البيانات والتقسيم والتسريب وعدم التوازن'],['Flashcards: first 20 terms','بطاقات: أول 20 مصطلحًا']]],
  ['2026-11-25','الأربعاء','25','نوفمبر',[['D1 lessons 3, 4, 5: algorithms, bias-variance, metrics','D1 الدروس 3 و4 و5: الخوارزميات والانحياز والتباين والمقاييس'],['Quiz D1 and review wrong answers','اختبار D1 ومراجعة الأخطاء']]],
  ['2026-11-26','الخميس','26','نوفمبر',[['D2 lessons 1, 2, 3: neural nets, training problems, CNN/RNN','D2 الدروس 1 و2 و3: الشبكات العصبية ومشاكل التدريب وCNN/RNN']]],
@@ -865,7 +865,7 @@ function gradeQuiz(){
 }
 
 function renderExam(){
-  var h='<h2>'+bi('Exam strategy','استراتيجية الاختبار')+'</h2>';
+  var h='<h2>'+bi('Quick reference','المرجع السريع')+'</h2>';
   h+='<div class="card"><h3>'+bi('What is confirmed about the exam','ما هو مؤكد عن الاختبار')+'</h3><div class="scroll"><table><tr><th>البند</th><th>الحالة</th></tr>'+
    '<tr><td>120 سؤال اختيار من متعدد، بالإنجليزية، 3 ساعات، حضوري مراقَب</td><td>مذكور في الإنفوغرافيك الرسمي للشارة</td></tr>'+
    '<tr><td>التقييم النهائي: الاختبار 50% + الخبرة 20% + التعليم 20% + الشهادات 10%</td><td>مذكور في الإنفوغرافيك الرسمي</td></tr>'+
@@ -998,7 +998,7 @@ function keysSearch(v){
   box.innerHTML=h;
 }
 function renderKeys(){
-  var h='<h2>'+bi('Solving strategies and answer keys','استراتيجيات الحل ومفاتيح الإجابة')+'</h2>';
+  var h='<h2>'+bi('Answering skills','مهارات الإجابة')+'</h2>';
   h+='<div class="card"><h3>'+bi('Clue finder','باحث المفاتيح: اكتبي كلمة من السؤال')+'</h3><p class="muted">بحث داخل قواعد الموقع والمصطلحات والفخاخ. لا يستخدم ذكاءً اصطناعيًا، فهو يطابق الكلمات فقط ويعمل بلا إنترنت بعد تحميل الصفحة.</p>'+
    '<input id="kq" class="kbox" type="search" dir="auto" placeholder="مثال: drift, احتيال, latency, RAG, canary" autocomplete="off"><div class="kres" id="kres"><p class="note">اكتبي كلمة أو كلمتين من نص السؤال، مثل: drift أو احتيال أو latency أو RAG.</p></div></div>';
   h+='<div class="card"><h3>'+bi('Answer in 6 steps','أجيبي بست خطوات')+'</h3><ol class="pts">'+
