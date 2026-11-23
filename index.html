@@ -130,6 +130,17 @@ footer b{color:var(--gold)}
 .vis{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
 .vis .pill,.vis a{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 12px;font-weight:700;text-decoration:none;border:1px solid var(--accent)}
 .vis b{font-size:1.05rem}
+.qar{direction:rtl;text-align:right;margin:-4px 0 12px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
+.opt .ar{display:block;direction:rtl;text-align:right;margin-top:4px;font-size:.93rem}
+body.m-ar .opt .ar{margin-top:0;font-size:1rem}
+.opt .en{display:block}
+body.m-both .opt .en{color:var(--muted);font-size:.9rem}
+body.m-both .qtext.en{font-size:.93rem;color:var(--muted)}
+body.m-ar .qtext.en{display:none}
+.kbox{width:100%;padding:12px 14px;border:2px solid var(--accent);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;font-size:1rem}
+.kres .hit{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px;background:var(--card)}
+.kres .tag{display:inline-block;font-size:.75rem;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:1px 9px;margin-inline-end:6px}
+.kgrid{display:grid;gap:10px}
 </style>
 </head>
 <body class="m-both">
@@ -154,6 +165,7 @@ footer b{color:var(--gold)}
     <button class="tab" role="tab" data-tab="learn">المذاكرة</button>
     <button class="tab" role="tab" data-tab="cards">بطاقات المصطلحات</button>
     <button class="tab" role="tab" data-tab="quiz">الاختبارات</button>
+    <button class="tab" role="tab" data-tab="keys">مفاتيح الإجابة</button>
     <button class="tab" role="tab" data-tab="exam">استراتيجية الاختبار</button>
     <div class="langs" role="group" aria-label="لغة العرض">
       <button data-m="both" aria-pressed="true">عربي + EN</button>
@@ -714,6 +726,7 @@ function view(){
   else if(tab==='learn')v.innerHTML=renderLearn();
   else if(tab==='cards')v.innerHTML=renderCards();
   else if(tab==='quiz')v.innerHTML=renderQuiz();
+  else if(tab==='keys')v.innerHTML=renderKeys();
   else v.innerHTML=renderExam();
 }
 function go(t){tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}view();window.scrollTo(0,0)}
@@ -775,9 +788,11 @@ function renderCards(){
 var BANK=[],bankState='loading',QALL=[];
 var SRC={core:'تدريب المساعد',140:'بنك 140',60:'بنك 60',ex2:'تمهيدي',docx:'محاكاة'};
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+var AR={};
 function buildAll(){
   var core=QCORE.map(function(q,i){return {id:'c'+i,src:'core',d:q[0],q:q[1],o:q[2],a:[q[3]],need:1,e:q[5],ea:q[4],shuf:true}});
   QALL=core.concat(BANK);
+  QALL.forEach(function(q){var a=AR[q.id];if(a&&a.q&&a.o&&a.o.length===q.o.length){q.qa=a.q;q.oa=a.o}});
 }
 function sameSet(a,b){if(a.length!==b.length)return false;var s=a.slice().sort().join(),t=b.slice().sort().join();return s===t}
 function pickN(arr,n){return shuffle(arr).slice(0,n)}
@@ -794,7 +809,7 @@ function startQuiz(filter){
   else pool=pickN(QALL.filter(function(q){return q.d===filter}),15);
   if(!pool.length){quiz={empty:true};return}
   quiz={filter:filter,items:shuffle(pool).map(function(q){
-    var o=q.o.map(function(t,k){return {t:t,ok:q.a.indexOf(k)>-1}});
+    var o=q.o.map(function(t,k){return {t:t,ta:q.oa?q.oa[k]:null,ok:q.a.indexOf(k)>-1}});
     return {q:q,opts:q.shuf?shuffle(o):o}}),pos:0,score:0,by:{},answered:false,sel:[],finished:false};
   quiz.timed=(filter==='mock'||filter==='b140'||filter==='b60');quiz.t0=Date.now();quiz.limit=quiz.items.length*90;
 }
@@ -826,16 +841,17 @@ function renderQuiz(){
   var it=quiz.items[quiz.pos],q=it.q;
   var h3='<div class="prog"><i style="width:'+(quiz.pos/quiz.items.length*100)+'%"></i></div><div class="card"><div class="row" style="justify-content:space-between"><span class="w">'+(DNAME[q.d]?DNAME[q.d].n:SRC[q.src])+'</span><span class="note">'+(quiz.timed?'<span class="w" id="tmr">'+fmtT(remaining())+'</span> ':'')+(quiz.pos+1)+' / '+quiz.items.length+'</span></div>';
   if(q.need>1)h3+='<p class="need">اختاري '+q.need+' إجابات · Select '+(q.need===2?'TWO':'THREE')+'</p>';
-  h3+='<div class="qtext" dir="ltr">'+esc(q.q)+'</div>';
+  if(q.qa)h3+='<div class="qtext en" dir="ltr">'+esc(q.q)+'</div><div class="qar ar" dir="rtl">'+esc(q.qa)+'</div>';
+  else h3+='<div class="qtext" dir="ltr">'+esc(q.q)+'</div>';
   it.opts.forEach(function(o,k){var c='opt';var chosen=quiz.sel.indexOf(k)>-1;
     if(quiz.answered){if(o.ok)c+=' ok';else if(chosen)c+=' no'}else if(chosen)c+=' sel';
-    h3+='<button class="'+c+'" data-opt="'+k+'"'+(quiz.answered?' disabled':'')+'>'+String.fromCharCode(65+k)+'. '+esc(o.t)+'</button>'});
+    h3+='<button class="'+c+'" data-opt="'+k+'"'+(quiz.answered?' disabled':'')+'>'+(o.ta?'<span class="en" dir="ltr">'+String.fromCharCode(65+k)+'. '+esc(o.t)+'</span><span class="ar" dir="rtl">'+String.fromCharCode(65+k)+'. '+esc(o.ta)+'</span>':String.fromCharCode(65+k)+'. '+esc(o.t))+'</button>'});
   if(!quiz.answered&&q.need>1)h3+='<button class="btn" id="qconfirm"'+(quiz.sel.length!==q.need?' disabled':'')+'>تأكيد ('+quiz.sel.length+'/'+q.need+')</button>';
   if(quiz.answered){
     var good=quiz.last;
     h3+='<div class="expl">'+(good?'<b style="color:var(--good)">صحيح</b>':'<b style="color:var(--bad)">غير صحيح</b>');
     if(q.ea)h3+=bi(esc(q.e),q.ea);else if(q.e)h3+='<div class="enraw" dir="ltr">'+esc(q.e)+'</div>';else h3+='<div>الإجابة الصحيحة مظلّلة بالأخضر.</div>';
-    h3+='</div><button class="btn" id="qnext">'+(quiz.pos+1<quiz.items.length?'التالي':'عرض النتيجة')+'</button>';
+    h3+='</div><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn ghost" data-askq="1">اسألي مدرّبك عن هذا السؤال</button>'+'<button class="btn" id="qnext">'+(quiz.pos+1<quiz.items.length?'التالي':'عرض النتيجة')+'</button></div>';
   }
   h3+='</div>';return h3;
 }
@@ -903,6 +919,98 @@ function renderExam(){
   return h;
 }
 
+
+/* ---------- answer keys tab ---------- */
+var KR=[
+['fraud detection احتيال missing fraud costly false negative false positive','Missing fraud costs more than a false alarm: prioritize recall (then precision, PR-AUC)','الاحتيال: فوات الاحتيال أغلى من الإنذار الكاذب فاختاري أعلى recall ثم precision وPR-AUC'],
+['disease medical rare patients missing positive','Missing a real positive is costly: prioritize recall','مرض نادر وفوات الحالة مكلف: recall'],
+['too many false alarms legitimate blocked users annoyed','False positives hurt: prioritize precision','حظر مستخدمين سليمين: precision'],
+['cold start spiky traffic scale to zero idle','Serverless / autoscaling to zero for spiky, low-volume traffic; keep a warm instance if cold-start latency matters','حركة متقطعة وقليلة: Serverless. وإن كان زمن البدء البارد مهمًا فأبقي نسخة دافئة'],
+['p99 latency tail slow requests','Check the tail (p99), not the average; fix with caching, batching limits, smaller model, more replicas','انظري إلى الذيل p99 لا المتوسط، والحل: تخزين مؤقت وتقليل حجم الدفعة ونموذج أصغر ونسخ أكثر'],
+['gpu memory model too large does not fit','Quantization, smaller model, or model parallelism across GPUs','النموذج لا يتسع في الذاكرة: تكميم أو نموذج أصغر أو توازي النموذج على عدة GPU'],
+['hallucination invents facts citations','RAG with trusted sources, lower temperature, require citations, human review for high stakes','الهلوسة: RAG بمصادر موثوقة وخفض temperature وطلب الاستشهاد ومراجعة بشرية'],
+['pdpl personal data kingdom residency in-country','Keep personal data in-country, data minimization, access control, retention limits (PDPL)','بيانات شخصية: داخل المملكة وتقليل البيانات وضبط الوصول وحدود الاحتفاظ (PDPL)'],
+['cost reduce expensive waste idle overprovisioned','Right-size, autoscale, cache repeated queries, smaller or quantized model, commit discounts for steady load, spot for fault-tolerant batch','خفض التكلفة: ضبط الحجم والتوسّع التلقائي والتخزين المؤقت ونموذج أصغر وخصم الالتزام للحمل الثابت وSpot للدفعات المتحمّلة'],
+['batch overnight millions scheduled','Batch inference (cheap, no latency need)','دفعات ليلية: استدلال دفعي'],
+['real time user waiting immediately','Online (real-time) inference with low latency','المستخدم ينتظر: استدلال مباشر'],
+['pii names national id mask anonymize','Mask or pseudonymize, minimize data, encrypt, restrict access; names removed is not always anonymous','بيانات شخصية: إخفاء وتقليل وتشفير وتقييد وصول، وحذف الاسم وحده لا يعني إخفاء الهوية'],
+['sensitive data external vendor llm api','Use the approved environment or in-country option; check classification and contracts before sending data out','بيانات حساسة لمزوّد خارجي: البيئة المعتمدة أو داخل الدولة، وراجعي التصنيف والعقود قبل الإرسال'],
+['rare class minority recall requirement','Class weights, resampling, PR-AUC and per-class recall; accuracy hides the problem','فئة نادرة: أوزان وإعادة أخذ عينات وPR-AUC وrecall لكل فئة'],
+['explain individual prediction regulator why rejected','SHAP or LIME for local explanations; model card for documentation','تفسير قرار فردي: SHAP أو LIME، وبطاقة النموذج للتوثيق'],
+['bias fairness groups approve less often','Fairness metrics (demographic parity, equal opportunity), audit by group, mitigate and document','تحيّز: مقاييس عدالة وتدقيق لكل فئة وتخفيف وتوثيق'],
+['agent tools permissions least privilege','Least privilege for tools, human approval for risky actions, treat retrieved content as untrusted','وكيل بأدوات: أقل صلاحيات وموافقة بشرية للإجراءات الخطرة ومحتوى مسترجع غير موثوق'],
+['same features different training serving mismatch','Feature store: one definition for training and serving','اختلاف حساب الميزات بين التدريب والتقديم: مخزن ميزات'],
+['rollback quickly previous version two environments','Blue-green: instant switch back','تراجع فوري بين بيئتين: Blue-Green'],
+['test new model real traffic no user impact','Shadow deployment: mirror traffic, users see old model only','اختبار على حركة حقيقية دون أثر: Shadow'],
+['gradually 5% 10% users expand if healthy','Canary deployment','تدرّج على نسبة صغيرة: Canary'],
+['webhook notify instead of polling event','Webhook (push) instead of polling','إشعار فوري بدل السؤال المتكرر: Webhook'],
+['replay events high volume stream log','Kafka (replayable log)','بث بحجم عالٍ وإعادة تشغيل: Kafka'],
+['without sharing password third party access','OAuth 2.0 (delegated access)','وصول طرف ثالث دون كلمة المرور: OAuth 2.0']
+];
+var TRAPS=[
+['The option is correct in general but does not answer this scenario','Re-read the last line. The right answer fits THIS constraint, not just good practice.','خيار صحيح عمومًا لكنه لا يجيب هذا السيناريو: ارجعي للسطر الأخير والقيد الحاسم'],
+['The most complex or most expensive option','Exams reward the simplest option that meets every requirement. Do not pick deep learning, fine-tuning or a bigger GPU unless required.','الأعقد أو الأغلى يغري. المطلوب الأبسط الذي يحقق كل المتطلبات'],
+['Meets two of three requirements','One failed requirement eliminates it. Tick each requirement per option in a mini-table.','يحقق متطلبين من ثلاثة: يُستبعد. ضعي علامة لكل متطلب أمام كل خيار'],
+['Fine-tune vs RAG','Knowledge that changes often, or needs sources: RAG. Style, tone or format: fine-tuning.','المعرفة المتغيرة ومصادرها: RAG. الأسلوب والنبرة والصياغة: ضبط دقيق'],
+['Accuracy on imbalanced data','High accuracy with rare positives is a trap. Think recall, precision, PR-AUC.','دقة عالية مع فئة نادرة فخ: فكّري في recall وprecision وPR-AUC'],
+['Test set used for tuning, or scaler fit on all data','That is leakage. Fit on training data only; keep the test set untouched.','ضبط على الاختبار أو تحجيم على كل البيانات: تسرّب'],
+['Data drift vs concept drift','Inputs changed: data drift. Same inputs now mean different outcomes: concept drift.','المدخلات تغيّرت: Data drift. العلاقة بين المدخل والنتيجة تغيّرت: Concept drift'],
+['Canary vs blue-green vs shadow','Small percent live: canary. Two environments, instant switch: blue-green. Mirrored with no user impact: shadow.','نسبة صغيرة: Canary. بيئتان وتحويل فوري: Blue-Green. نسخ الحركة دون أثر: Shadow'],
+['SLA vs SLO vs SLI','Contract with penalty: SLA. Internal target: SLO. The measured number: SLI.','العقد والعقوبة: SLA. الهدف الداخلي: SLO. الرقم المقاس: SLI'],
+['Authentication vs authorization','Who are you: authentication. What may you do: authorization.','من أنت: مصادقة. ماذا يحق لك: تفويض'],
+['Encryption in transit vs at rest','Moving over the network: in transit. Stored in a database or disk: at rest.','أثناء النقل مقابل أثناء التخزين'],
+['Names removed means anonymous','Rare combinations can still identify people. Policy and classification may still apply.','حذف الأسماء لا يكفي: تركيبات نادرة قد تكشف الهوية'],
+['Words like ALWAYS and NEVER','Absolute statements are usually wrong, unless the scenario forces them.','كلمات «دائمًا» و«أبدًا» غالبًا خطأ'],
+['EXCEPT / NOT / LEAST','Three options are true and one is not. Mark each option true or false before choosing.','ثلاثة صحيحة وواحد خطأ: ضعي صح/خطأ لكل خيار أولًا'],
+['Select TWO / THREE','Judge each option alone against the scenario. Do not choose a pair only because they sound related.','اختاري اثنين أو ثلاثة: قيّمي كل خيار منفردًا']
+];
+var KCORP=null;
+function knorm(t){return String(t||'').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')}
+function kcorpus(){
+  if(KCORP)return KCORP;KCORP=[];
+  DEC.forEach(function(r){KCORP.push({k:'قاعدة',a:r[0],b:r[1],c:r[2],n:knorm(r[0]+' '+r[1]+' '+r[2])})});
+  KR.forEach(function(r){KCORP.push({k:'مفتاح',a:r[0],b:r[1],c:r[2],n:knorm(r[0]+' '+r[1]+' '+r[2])})});
+  G.forEach(function(r){KCORP.push({k:'مصطلح',a:r[0]+' · '+r[1],b:r[2],c:r[3],n:knorm(r[0]+' '+r[1]+' '+r[2]+' '+r[3])})});
+  TRAPS.forEach(function(r){KCORP.push({k:'فخ',a:r[0],b:r[1],c:r[2],n:knorm(r[0]+' '+r[1]+' '+r[2])})});
+  return KCORP;
+}
+function keysSearch(v){
+  var box=$('#kres');if(!box)return;
+  var toks=knorm(v).split(/[\s,.;:/()?!"'-]+/).filter(function(x){return x.length>1});
+  if(!toks.length){box.innerHTML='<p class="note">اكتبي كلمة أو كلمتين من نص السؤال، مثل: drift أو احتيال أو latency أو RAG.</p>';return}
+  var res=[];
+  kcorpus().forEach(function(it){var sc=0;toks.forEach(function(t){if(it.n.indexOf(t)>-1)sc++});if(sc)res.push([sc,it])});
+  res.sort(function(a,b){return b[0]-a[0]});
+  if(!res.length){box.innerHTML='<p class="note">لا نتائج. جرّبي كلمة أبسط أو بالإنجليزية.</p>';return}
+  var h='';res.slice(0,8).forEach(function(r){var it=r[1];
+    h+='<div class="hit"><span class="tag">'+it.k+'</span><b dir="ltr" style="unicode-bidi:plaintext">'+esc(it.a)+'</b><div dir="ltr" style="color:var(--accent);margin-top:4px">'+esc(it.b)+'</div><div style="margin-top:4px">'+esc(it.c)+'</div></div>'});
+  box.innerHTML=h;
+}
+function renderKeys(){
+  var h='<h2>'+bi('Answer keys','مفاتيح الإجابة')+'</h2>';
+  h+='<div class="card"><h3>'+bi('Clue finder','باحث المفاتيح: اكتبي كلمة من السؤال')+'</h3><p class="muted">بحث داخل قواعد الموقع والمصطلحات والفخاخ. لا يستخدم ذكاءً اصطناعيًا، فهو يطابق الكلمات فقط ويعمل بلا إنترنت بعد تحميل الصفحة.</p>'+
+   '<input id="kq" class="kbox" type="search" dir="auto" placeholder="مثال: drift, احتيال, latency, RAG, canary" autocomplete="off"><div class="kres" id="kres"><p class="note">اكتبي كلمة أو كلمتين من نص السؤال، مثل: drift أو احتيال أو latency أو RAG.</p></div></div>';
+  h+='<div class="card"><h3>'+bi('Answer in 6 steps','أجيبي بست خطوات')+'</h3><ol class="pts">'+
+   '<li>'+bi('Read the last line: what is asked? (BEST, FIRST, EXCEPT?)','اقرئي السطر الأخير: ما المطلوب؟ (الأنسب، أول خطوة، ما عدا؟)')+'</li>'+
+   '<li>'+bi('Underline the deciding constraint: cost, latency, privacy, little data, no retraining.','ضعي خطًا تحت القيد الحاسم: تكلفة، زمن، خصوصية، بيانات قليلة، بلا إعادة تدريب.')+'</li>'+
+   '<li>'+bi('Guess the answer BEFORE reading the options.','توقعي الإجابة قبل قراءة الخيارات.')+'</li>'+
+   '<li>'+bi('Cross out options that break any requirement.','اشطبي الخيارات التي تخالف أي متطلب.')+'</li>'+
+   '<li>'+bi('Between two left, pick the simpler, cheaper, lower-risk one.','بين خيارين: الأبسط والأرخص والأقل مخاطرة.')+'</li>'+
+   '<li>'+bi('About 90 seconds. Over two minutes: flag it and move on.','حوالي 90 ثانية. تجاوزت دقيقتين: علّميه وانتقلي.')+'</li></ol></div>';
+  h+='<div class="card"><h3>'+bi('Playbook by question type','خطة لكل نوع سؤال')+'</h3><div class="kgrid">'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>حل المشكلات</b><br>حدّدي العَرَض أولًا (دقة تنخفض، زمن يرتفع، تكلفة تزيد)، ثم السبب الأرجح، ثم أقل حل يعالج السبب. لا تقفزي إلى إعادة التدريب أو نموذج أكبر.</div>'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>مطابقة المتطلبات (الأصعب)</b><br>اكتبي المتطلبات الثلاثة، وأمام كل خيار ✓ أو ✗ لكل متطلب. الفائز ما حقق الثلاثة بأقل تكلفة. إن تعادل خياران، فالأبسط.</div>'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>الحوكمة والمعايير</b><br>اربطي كلمة السيناريو باسم رسمي: تحيّز بين فئات يقابل Fairness، قرار لا يمكن شرحه يقابل Transparency and Explainability، من المسؤول يقابل Accountability. احفظي الأسماء بالنص من تبويب الاستراتيجية.</div>'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>تحليل التكاليف</b><br>ابحثي عن أكبر بند، ثم الموارد الخاملة أو المبالغ في حجمها، ثم ما يتكرر ويمكن تخزينه مؤقتًا. حلول شائعة: ضبط الحجم، توسّع تلقائي، تخزين مؤقت، نموذج أصغر أو مكمَّم. تحقّقي من أن الحل لا يكسر زمن الاستجابة أو الجودة.</div>'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>اختاري اثنين أو ثلاثة</b><br>قيّمي كل خيار كأنه سؤال صح/خطأ مستقل أمام السيناريو، ثم اختاري العدد المطلوب بالضبط.</div></div></div>';
+  h+='<div class="card"><h3>'+bi('Question traps','فخاخ الأسئلة')+'</h3><div class="scroll"><table><tr><th>Trap</th><th>How to avoid it</th><th>بالعربي</th></tr>';
+  TRAPS.forEach(function(r){h+='<tr><td class="e">'+esc(r[0])+'</td><td class="e" style="color:var(--accent)">'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'});
+  h+='</table></div></div>';
+  h+='<div class="card"><h3>'+bi('Practise it','طبّقي المفاتيح الآن')+'</h3><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn" data-quizdom="ex2">تمهيدي سريع (20)</button><button class="btn ghost" data-quizdom="mock">محاكاة مؤقتة (30)</button><button class="btn ghost" data-quizdom="wrong">أخطائي</button></div></div>';
+  h+='<p class="note">القواعد هنا إرشادات عامة للمذاكرة وليست أسئلة رسمية. مفاتيح التكلفة تقريبية، فاعتمدي دائمًا على قيود السيناريو.</p>';
+  return h;
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target.closest('button,summary,label,input');if(!t)return;
@@ -916,6 +1024,10 @@ document.addEventListener('click',function(e){
   if(t.id==='cnext'){cardIdx=(cardIdx+1)%CG().length;cardFlip=false;view();return}
   if(t.id==='cprev'){cardIdx=(cardIdx-1+CG().length)%CG().length;cardFlip=false;view();return}
   if(t.id==='cshuf'){cardIdx=Math.floor(Math.random()*CG().length);cardFlip=false;view();return}
+  if(t.dataset&&t.dataset.askq&&quiz){var it0=quiz.items[quiz.pos],q0=it0.q,ps=[],cr=[];
+    it0.opts.forEach(function(o,k){ps.push(String.fromCharCode(65+k)+'. '+o.t);if(o.ok)cr.push(String.fromCharCode(65+k))});
+    var mine=quiz.sel.map(function(k){return String.fromCharCode(65+k)}).join(', ');
+    copyText('اشرحي لي بالعربي مع المصطلحات بالإنجليزية لماذا الإجابة الصحيحة هي '+cr.join(', ')+' في هذا السؤال، ولماذا الخيارات الأخرى خطأ، وكيف أتجنب الفخ:\n\n'+q0.q+'\n'+ps.join('\n')+'\n\nإجابتي: '+mine,t);return}
   if(t.id==='qback'){quiz=null;view();return}
   if(t.id==='qagain'){startQuiz(quiz.filter);view();return}
   if(t.dataset&&t.dataset.opt!==undefined&&quiz&&!quiz.answered){
@@ -929,6 +1041,7 @@ document.addEventListener('click',function(e){
     else{quiz.finished=true;quiz.t1=Date.now();if(DNAME[quiz.filter]){var pc=Math.round(quiz.score/quiz.items.length*100);if(S.best[quiz.filter]==null||pc>S.best[quiz.filter])S.best[quiz.filter]=pc;save()}}
     view();window.scrollTo(0,0);return}
 });
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='kq')keysSearch(e.target.value)});
 document.addEventListener('change',function(e){
   var t=e.target;
   if(t.dataset.plan){S.plan[t.dataset.plan]=t.checked;save();t.closest('.chk').classList.toggle('done',t.checked)}
@@ -936,12 +1049,13 @@ document.addEventListener('change',function(e){
 });
 document.addEventListener('click',function(e){var f=e.target.closest('#flash');if(f){cardFlip=!cardFlip;view()}});
 document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.id==='flash'){e.preventDefault();cardFlip=!cardFlip;view();var f=$('#flash');if(f)f.focus()}});
-window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(['plan','learn','cards','quiz','exam'].indexOf(h)>-1&&h!==tab){tab=h;view()}});
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','exam'].indexOf(h)>-1&&h!==tab){tab=h;view()}});
 
 buildAll();
+fetch('ar.json').then(function(r){return r.ok?r.json():{}}).then(function(j){AR=j||{};buildAll();if(tab==='quiz'&&!quiz)view()}).catch(function(){});
 fetch('bank.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){BANK=j;bankState='ok';buildAll();if(tab==='quiz'&&!quiz)view()}).catch(function(){bankState='err';if(tab==='quiz'&&!quiz)view()});
 setMode(S.mode||'both');updateCount();
-var h0=location.hash.slice(1);if(['plan','learn','cards','quiz','exam'].indexOf(h0)>-1)tab=h0;
+var h0=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','exam'].indexOf(h0)>-1)tab=h0;
 view();
 
 /* ---------- visitor counter (GoatCounter public counter) ---------- */
