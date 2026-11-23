@@ -165,7 +165,7 @@ body.m-ar .qtext.en{display:none}
     <button class="tab" role="tab" data-tab="learn">المذاكرة</button>
     <button class="tab" role="tab" data-tab="cards">بطاقات المصطلحات</button>
     <button class="tab" role="tab" data-tab="quiz">الاختبارات</button>
-    <button class="tab" role="tab" data-tab="keys">مفاتيح الإجابة</button>
+    <button class="tab" role="tab" data-tab="keys">استراتيجيات الحل</button>
     <button class="tab" role="tab" data-tab="exam">استراتيجية الاختبار</button>
     <div class="langs" role="group" aria-label="لغة العرض">
       <button data-m="both" aria-pressed="true">عربي + EN</button>
@@ -987,7 +987,7 @@ function keysSearch(v){
   box.innerHTML=h;
 }
 function renderKeys(){
-  var h='<h2>'+bi('Answer keys','مفاتيح الإجابة')+'</h2>';
+  var h='<h2>'+bi('Solving strategies and answer keys','استراتيجيات الحل ومفاتيح الإجابة')+'</h2>';
   h+='<div class="card"><h3>'+bi('Clue finder','باحث المفاتيح: اكتبي كلمة من السؤال')+'</h3><p class="muted">بحث داخل قواعد الموقع والمصطلحات والفخاخ. لا يستخدم ذكاءً اصطناعيًا، فهو يطابق الكلمات فقط ويعمل بلا إنترنت بعد تحميل الصفحة.</p>'+
    '<input id="kq" class="kbox" type="search" dir="auto" placeholder="مثال: drift, احتيال, latency, RAG, canary" autocomplete="off"><div class="kres" id="kres"><p class="note">اكتبي كلمة أو كلمتين من نص السؤال، مثل: drift أو احتيال أو latency أو RAG.</p></div></div>';
   h+='<div class="card"><h3>'+bi('Answer in 6 steps','أجيبي بست خطوات')+'</h3><ol class="pts">'+
@@ -997,6 +997,21 @@ function renderKeys(){
    '<li>'+bi('Cross out options that break any requirement.','اشطبي الخيارات التي تخالف أي متطلب.')+'</li>'+
    '<li>'+bi('Between two left, pick the simpler, cheaper, lower-risk one.','بين خيارين: الأبسط والأرخص والأقل مخاطرة.')+'</li>'+
    '<li>'+bi('About 90 seconds. Over two minutes: flag it and move on.','حوالي 90 ثانية. تجاوزت دقيقتين: علّميه وانتقلي.')+'</li></ol></div>';
+  h+='<div class="card"><h3>'+bi('Worked example, step by step','مثال محلول خطوة بخطوة')+'</h3>'+
+   '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px">'+bi('A government portal must answer citizens about rules that change every month. Answers must show the source document. Staff have no machine-learning team and the budget is small. Which approach? A) Fine-tune a large model on all rules. B) RAG over the current rule documents with citations. C) Train a model from scratch. D) Use a general chatbot with no documents.','بوابة حكومية يجب أن تجيب المواطنين عن أنظمة تتغير كل شهر، ويجب أن تُظهر الإجابة المستند المصدر. لا يوجد فريق تعلّم آلة والميزانية صغيرة. أي نهج؟ أ) ضبط دقيق لنموذج كبير على كل الأنظمة. ب) RAG على مستندات الأنظمة الحالية مع الاستشهاد. ج) تدريب نموذج من الصفر. د) روبوت محادثة عام بلا مستندات.')+'</div>'+
+   '<ol class="pts">'+
+   '<li>'+bi('Last line: which APPROACH fits? One answer.','السطر الأخير: أي نهج يناسب؟ إجابة واحدة.')+'</li>'+
+   '<li>'+bi('Deciding constraints: rules change monthly, must cite source, small budget, no ML team.','القيود الحاسمة: أنظمة تتغير شهريًا، استشهاد بالمصدر، ميزانية صغيرة، لا فريق تعلّم آلة.')+'</li>'+
+   '<li>'+bi('Guess before options: retrieve current documents and cite them = RAG.','التوقع قبل الخيارات: استرجاع المستندات الحالية والاستشهاد بها = RAG.')+'</li>'+
+   '<li>'+bi('Cross out: A and C cannot follow monthly changes cheaply and cannot cite sources. D has no documents.','الشطب: أ وج لا تواكبان التغيير الشهري بتكلفة قليلة ولا تستشهدان بالمصدر. د بلا مستندات.')+'</li>'+
+   '<li><b>'+bi('Answer: B. Trap avoided: A is a popular choice but fails the changing-knowledge constraint.','الجواب: ب. الفخ المتجنَّب: أ خيار شائع لكنه يخالف قيد المعرفة المتغيرة.')+'</b></li></ol></div>';
+  h+='<div class="card"><h3>'+bi('Before you submit: checklist','قبل التسليم: قائمة مراجعة')+'</h3><ol class="pts">'+
+   '<li>'+bi('Did I answer what the LAST LINE asked (best, first, EXCEPT)?','هل أجبت عمّا طلبه السطر الأخير (الأنسب، الأول، ما عدا)؟')+'</li>'+
+   '<li>'+bi('Does my answer meet EVERY requirement, not just two?','هل إجابتي تحقق كل المتطلبات وليس اثنين فقط؟')+'</li>'+
+   '<li>'+bi('Is it the simplest option that works?','هل هي أبسط خيار يعمل؟')+'</li>'+
+   '<li>'+bi('Select TWO or THREE: did I pick exactly the number asked?','اختاري اثنين أو ثلاثة: هل اخترت العدد المطلوب بالضبط؟')+'</li>'+
+   '<li>'+bi('Flagged questions: come back only after finishing all others.','الأسئلة المعلّمة: ارجعي لها بعد إنهاء الباقي فقط.')+'</li>'+
+   '<li>'+bi('Do not change an answer unless you found a clear reason.','لا تغيّري إجابة إلا إذا وجدتِ سببًا واضحًا.')+'</li></ol></div>';
   h+='<div class="card"><h3>'+bi('Playbook by question type','خطة لكل نوع سؤال')+'</h3><div class="kgrid">'+
    '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>'+bi('Troubleshooting','حل المشكلات')+'</b><div style="margin-top:6px">'+bi('Name the symptom first (accuracy drops, latency rises, cost grows), then the likeliest cause, then the smallest fix that addresses that cause. Do not jump to retraining or a bigger model.','حدّدي العَرَض أولًا (دقة تنخفض، زمن يرتفع، تكلفة تزيد)، ثم السبب الأرجح، ثم أقل حل يعالج السبب. لا تقفزي إلى إعادة التدريب أو نموذج أكبر.')+'</div></div>'+
    '<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><b>'+bi('Requirement matching (hardest)','مطابقة المتطلبات (الأصعب)')+'</b><div style="margin-top:6px">'+bi('Write the three requirements and put a ✓ or ✗ per requirement beside each option. The winner meets all three at the lowest cost. If two tie, pick the simpler.','اكتبي المتطلبات الثلاثة، وأمام كل خيار ✓ أو ✗ لكل متطلب. الفائز ما حقق الثلاثة بأقل تكلفة. إن تعادل خياران، فالأبسط.')+'</div></div>'+
