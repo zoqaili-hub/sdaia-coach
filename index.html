@@ -166,6 +166,7 @@ body.m-ar .qtext.en{display:none}
     <button class="tab" role="tab" data-tab="cards">بطاقات المصطلحات</button>
     <button class="tab" role="tab" data-tab="quiz">الاختبارات</button>
     <button class="tab" role="tab" data-tab="keys">مهارات الإجابة</button>
+    <button class="tab" role="tab" data-tab="coach">المدرّب</button>
     <button class="tab" role="tab" data-tab="exam">المرجع السريع</button>
     <div class="langs" role="group" aria-label="لغة العرض">
       <button data-m="both" aria-pressed="true">عربي + EN</button>
@@ -727,6 +728,7 @@ function view(){
   else if(tab==='cards')v.innerHTML=renderCards();
   else if(tab==='quiz')v.innerHTML=renderQuiz();
   else if(tab==='keys')v.innerHTML=renderKeys();
+  else if(tab==='coach')v.innerHTML=renderCoach();
   else v.innerHTML=renderExam();
 }
 function go(t){tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}view();window.scrollTo(0,0)}
@@ -1039,6 +1041,75 @@ h+='<div class="card"><h3>'+bi('Question traps','فخاخ الأسئلة')+'</h3
   return h;
 }
 
+
+/* ---------- coach (rule-based bot, no AI) ---------- */
+var coach={msgs:[],cur:null};
+function coachBot(h){coach.msgs.push({b:1,h:h})}
+function coachUser(t){coach.msgs.push({b:0,h:esc(t)})}
+function coachChips(){return '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">'+
+  '<button class="btn ghost" data-cchip="quiz">'+bi('Quiz me','اختبرني')+'</button>'+
+  '<button class="btn ghost" data-cchip="trap">'+bi('A random trap','فخ عشوائي')+'</button>'+
+  '<button class="btn ghost" data-cchip="help">'+bi('What can you do?','ماذا تستطيع؟')+'</button></div>'}
+function coachWelcome(){coachBot('<div>'+bi('Hi! I am a simple rule-based coach (not AI). Type a word from a question (drift, RAG, latency, احتيال...) and I will find the rule, term and example. Or press Quiz me.','أهلًا! أنا مدرّب بسيط يعمل بقواعد (ليس ذكاءً اصطناعيًا). اكتبي كلمة من السؤال (drift أو RAG أو latency أو احتيال...) وأجد لك القاعدة والمصطلح والمثال. أو اضغطي «اختبرني».')+'</div>'+coachChips())}
+function coachAsk(){
+  var pool=QALL.filter(function(q){return q.a&&q.a.length===1});
+  if(!pool.length){coachBot('<div>'+bi('Questions are still loading. Try again in a moment.','الأسئلة ما زالت تُحمَّل. جرّبي بعد لحظات.')+'</div>');return}
+  var q=pool[Math.floor(Math.random()*pool.length)];coach.cur=q;
+  var h='<div dir="ltr" style="text-align:start"><b>'+esc(q.q)+'</b></div>'+(q.qa?'<div class="ar" style="margin-top:6px">'+esc(q.qa)+'</div>':'');
+  h+='<div style="display:grid;gap:6px;margin-top:8px">';
+  q.o.forEach(function(t,k){h+='<button class="btn ghost" style="text-align:start" data-cans="'+k+'"><span dir="ltr" style="display:block">'+String.fromCharCode(65+k)+'. '+esc(t)+'</span>'+(q.oa&&q.oa[k]?'<span class="ar" style="display:block">'+esc(q.oa[k])+'</span>':'')+'</button>'});
+  coachBot(h+'</div>');
+}
+function coachAnswer(k){
+  var q=coach.cur;if(!q)return;coach.cur=null;
+  var ok=q.a.indexOf(k)>-1,L=String.fromCharCode(65+q.a[0]);
+  coachUser(String.fromCharCode(65+k)+'. '+q.o[k]);
+  var h='<div><b style="color:var(--'+(ok?'good':'bad')+',#c0392b)">'+(ok?bi('Correct!','صحيح!'):bi('Not quite. Correct answer: '+L,'غير صحيح. الجواب الصحيح: '+L))+'</b></div>';
+  h+='<div dir="ltr" style="margin-top:6px">'+esc(q.o[q.a[0]])+'</div>'+(q.oa&&q.oa[q.a[0]]?'<div class="ar">'+esc(q.oa[q.a[0]])+'</div>':'');
+  if(q.e)h+='<div style="margin-top:8px">'+(q.ea?bi(esc(q.e),q.ea):'<div dir="ltr">'+esc(q.e)+'</div>')+'</div>';
+  if(!ok){S.wrong[q.id]=1;try{save()}catch(e){}}
+  h+='<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn" data-cchip="quiz">'+bi('Next question','سؤال آخر')+'</button></div>';
+  coachBot(h);
+}
+function coachReply(t){
+  var tt=knorm(t);
+  if(/اختبر|quiz|test me/.test(tt)){coachAsk();return}
+  if(/فخ|trap/.test(tt)){coachTrap();return}
+  if(/ماذا|help|مساعد|كيف/.test(tt)&&tt.length<24){coachChip('help');return}
+  var toks=tt.split(/[\s,.;:/()?!"'-]+/).filter(function(x){return x.length>1}),res=[];
+  kcorpus().forEach(function(it){var sc=0;toks.forEach(function(x){if(it.n.indexOf(x)>-1)sc++});if(sc)res.push([sc,it])});
+  res.sort(function(a,b){return b[0]-a[0]});
+  if(!res.length){coachBot('<div>'+bi('I found nothing for that. Try one key word from the question, in English or Arabic.','لم أجد شيئًا. جرّبي كلمة مفتاحية واحدة من السؤال بالعربي أو الإنجليزي.')+'</div>'+coachChips());return}
+  var h='<div>'+bi('Here is what I found:','وجدت لك:')+'</div>';
+  res.slice(0,3).forEach(function(r){var it=r[1],ix=-1;
+    if(it.k==='قاعدة'){for(var i=0;i<DEC.length;i++){if(DEC[i][0]===it.a){ix=i;break}}}
+    h+='<div class="hit" style="border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px"><span class="tag">'+it.k+'</span> <b dir="ltr" style="unicode-bidi:plaintext">'+esc(it.a)+'</b><div dir="ltr" style="color:var(--accent);margin-top:4px">'+esc(it.b)+'</div><div style="margin-top:4px">'+esc(it.c)+'</div>'+
+      (ix>-1&&DECX[ix]?'<div style="margin-top:6px;background:var(--soft,rgba(0,0,0,.04));border-radius:8px;padding:6px 8px">'+bi('<b>Example:</b> '+esc(DECX[ix][2]),'<b>مثال:</b> '+esc(DECX[ix][3]))+'</div>':'')+'</div>'});
+  coachBot(h+coachChips());
+}
+function coachTrap(){var r=TRAPS[Math.floor(Math.random()*TRAPS.length)];
+  coachBot('<div><b dir="ltr">'+esc(r[0])+'</b></div><div style="margin-top:6px">'+bi(esc(r[1]),esc(r[2]))+'</div><div style="margin-top:6px;background:var(--soft,rgba(0,0,0,.04));border-radius:8px;padding:6px 8px">'+bi('<b>Example:</b> '+esc(r[3]),'<b>مثال:</b> '+esc(r[4]))+'</div>'+coachChips())}
+function coachChip(c){
+  if(c==='quiz')coachAsk();
+  else if(c==='trap')coachTrap();
+  else coachBot('<div>'+bi('I can: 1) find rules and terms from a key word, 2) quiz you one question at a time and explain, 3) show a random question trap. I do not understand free sentences, and I never invent answers: everything comes from the site content.','أستطيع: 1) إيجاد القواعد والمصطلحات من كلمة مفتاحية، 2) اختبارك سؤالًا سؤالًا مع الشرح، 3) عرض فخ أسئلة عشوائي. لا أفهم الجمل الحرة ولا أخترع إجابات: كل شيء من محتوى الموقع.')+'</div>'+coachChips());
+}
+function renderCoach(){
+  if(!coach.msgs.length)coachWelcome();
+  var h='<h2>'+bi('Coach','المدرّب')+'</h2><div class="card" id="cbox" style="max-height:62vh;overflow:auto">';
+  coach.msgs.forEach(function(m){h+='<div style="margin:8px 0;display:flex;justify-content:'+(m.b?'flex-start':'flex-end')+'"><div style="max-width:92%;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:'+(m.b?'transparent':'var(--soft,rgba(0,0,0,.06))')+'">'+m.h+'</div></div>'});
+  h+='</div><div class="row" style="gap:8px;margin-top:8px"><input id="cin" class="kbox" dir="auto" placeholder="اكتبي كلمة أو اكتبي: اختبرني" autocomplete="off"><button class="btn" id="cgo">'+bi('Send','إرسال')+'</button></div>';
+  return h;
+}
+function coachRefresh(){view();var b=$('#cbox');if(b)b.scrollTop=b.scrollHeight}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('button');if(!t||tab!=='coach')return;
+  if(t.dataset.cchip){coachUser(t.dataset.cchip==='quiz'?'اختبرني':t.dataset.cchip==='trap'?'فخ عشوائي':'ماذا تستطيع؟');coachChip(t.dataset.cchip);coachRefresh();return}
+  if(t.dataset.cans!==undefined){coachAnswer(+t.dataset.cans);coachRefresh();return}
+  if(t.id==='cgo'){var i=$('#cin');var v=i&&i.value.trim();if(v){coachUser(v);coachReply(v);coachRefresh()}}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target&&e.target.id==='cin'){var v=e.target.value.trim();if(v){coachUser(v);coachReply(v);coachRefresh()}}});
+
 /* ---------- events ---------- */
 document.addEventListener('click',function(e){
   var t=e.target.closest('button,summary,label,input');if(!t)return;
@@ -1077,13 +1148,13 @@ document.addEventListener('change',function(e){
 });
 document.addEventListener('click',function(e){var f=e.target.closest('#flash');if(f){cardFlip=!cardFlip;view()}});
 document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.id==='flash'){e.preventDefault();cardFlip=!cardFlip;view();var f=$('#flash');if(f)f.focus()}});
-window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','exam'].indexOf(h)>-1&&h!==tab){tab=h;view()}});
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','coach','exam'].indexOf(h)>-1&&h!==tab){tab=h;view()}});
 
 buildAll();
 fetch('ar.json').then(function(r){return r.ok?r.json():{}}).then(function(j){AR=j||{};buildAll();if(tab==='quiz'&&!quiz)view()}).catch(function(){});
 fetch('bank.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){BANK=j;bankState='ok';buildAll();if(tab==='quiz'&&!quiz)view()}).catch(function(){bankState='err';if(tab==='quiz'&&!quiz)view()});
 setMode(S.mode||'both');updateCount();
-var h0=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','exam'].indexOf(h0)>-1)tab=h0;
+var h0=location.hash.slice(1);if(['plan','learn','cards','quiz','keys','coach','exam'].indexOf(h0)>-1)tab=h0;
 view();
 
 /* ---------- visitor counter (GoatCounter public counter) ---------- */
