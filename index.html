@@ -1091,10 +1091,14 @@ view();
 (function(){
   var GC='https://sdaia-coach.goatcounter.com';
   function setv(u,t){try{$('#visU b').textContent=u;$('#visT b').textContent=t}catch(e){}}
+  function num(x){return parseInt(String(x||'0').replace(/[^0-9]/g,''),10)||0}
+  function get(p){return fetch(GC+'/counter/'+p+'.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).catch(function(){return null})}
   function load(){
-    fetch(GC+'/counter/TOTAL.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()})
-      .then(function(j){setv(j.count_unique||j.count||'0',j.count||'0')})
-      .catch(function(){setv('—','—')});
+    Promise.all([get('TOTAL'),get('%2Fsdaia-coach')]).then(function(r){
+      var u=0,t=0,ok=false;
+      r.forEach(function(j){if(j){ok=true;u=Math.max(u,num(j.count_unique||j.count));t=Math.max(t,num(j.count))}});
+      if(ok)setv(u,t);else setv('—','—');
+    });
   }
   load();
   /* refresh after our own hit has been recorded */
