@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مدرّب شارة مهندس الذكاء الاصطناعي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one narrow column, sticky header with countdown, tab bar, content cards. Domain weights drive every colour bar. */
+:root{
+  --bg:#f4f7fa; --card:#ffffff; --ink:#0e1e32; --muted:#4f6379; --line:#d9e2ec;
+  --accent:#0a7ea4; --accent-soft:#e2f1f7; --gold:#a8780f; --gold-soft:#fbf1d9;
+  --good:#17724a; --good-soft:#e1f4ea; --bad:#b83a2c; --bad-soft:#fbe6e2;
+  --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0a1420; --card:#111f31; --ink:#e7eef6; --muted:#9bb0c6; --line:#22354b;
+    --accent:#3bc3ea; --accent-soft:#11364a; --gold:#e5b84a; --gold-soft:#3a2f12;
+    --good:#47c88a; --good-soft:#0f3324; --bad:#ff8272; --bad-soft:#3d1a16; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0a1420; --card:#111f31; --ink:#e7eef6; --muted:#9bb0c6; --line:#22354b;
+  --accent:#3bc3ea; --accent-soft:#11364a; --gold:#e5b84a; --gold-soft:#3a2f12;
+  --good:#47c88a; --good-soft:#0f3324; --bad:#ff8272; --bad-soft:#3d1a16; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.75;font-size:16px}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.top{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:18px 0 12px}
+.brand h1{margin:0;font-size:1.35rem;line-height:1.35;text-wrap:balance}
+.brand .sub{color:var(--muted);font-size:.9rem;direction:ltr;text-align:right}
+.by{margin-top:6px;display:inline-block;background:var(--gold-soft);color:var(--gold);font-weight:600;font-size:.9rem;padding:2px 12px;border-radius:99px}
+.count{display:flex;gap:10px;align-items:center;background:var(--accent-soft);border-radius:14px;padding:8px 16px}
+.count b{font-size:2rem;line-height:1;font-variant-numeric:tabular-nums;color:var(--accent)}
+.count span{font-size:.85rem;color:var(--muted);line-height:1.35}
+nav{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;align-items:center}
+nav button.tab{background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px;white-space:nowrap;font-weight:600;color:var(--muted)}
+nav button.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.langs{margin-inline-start:auto;display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:2px}
+.langs button{border:0;background:none;border-radius:6px;padding:3px 10px;font-size:.85rem;color:var(--muted)}
+.langs button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{padding:20px 0 48px}
+h2{font-size:1.3rem;margin:0 0 12px;text-wrap:balance}
+h3{font-size:1.08rem;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.muted{color:var(--muted)}
+.en{display:block;direction:ltr;text-align:left}
+.ar{display:block}
+body.m-ar .en{display:none} body.m-en .ar{display:none}
+body.m-both .pair .en{color:var(--muted);font-size:.93rem}
+.pair{margin-bottom:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 14px;font-weight:500}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:8px 18px;font-weight:600}
+.btn.ghost{background:none;color:var(--accent);border:1px solid var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 56px;gap:10px;align-items:center;background:none;border:0;padding:0;text-align:start;width:100%}
+.bar .lbl{font-size:.92rem;line-height:1.4}
+.bar .track{height:9px;border-radius:9px;background:var(--line);margin-top:4px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:9px}
+.bar .pc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);direction:ltr;text-align:left}
+.day{display:grid;grid-template-columns:64px 1fr;gap:12px}
+.day .dt{text-align:center;border-radius:10px;background:var(--bg);padding:6px 2px;align-self:start}
+.day .dt b{display:block;font-size:1.4rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.day .dt small{color:var(--muted)}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.day.today .dt{background:var(--accent);color:#fff}.day.today .dt small{color:#fff}
+.day.exam{border-color:var(--gold)}.day.exam .dt{background:var(--gold);color:#fff}.day.exam .dt small{color:#fff}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:3px 0}
+.chk input{width:20px;height:20px;margin-top:5px;accent-color:var(--accent);flex:none}
+.chk.done .tx{text-decoration:line-through;opacity:.6}
+.w{font-variant-numeric:tabular-nums;direction:ltr;display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:0 8px;font-weight:700;font-size:.85rem}
+.pts{margin:8px 0 0;padding-inline-start:20px}
+.pts li{margin-bottom:6px}
+.trap{background:var(--gold-soft);border-inline-start:4px solid var(--gold);border-radius:8px;padding:8px 12px;margin-top:10px}
+.trap b{color:var(--gold)}
+.lesson summary{cursor:pointer;font-weight:600;list-style:none;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.lesson summary::-webkit-details-marker{display:none}
+.lesson summary::after{content:"＋";color:var(--accent);font-weight:700}
+.lesson[open] summary::after{content:"－"}
+.tag{font-size:.78rem;background:var(--good-soft);color:var(--good);border-radius:8px;padding:0 8px;margin-inline-start:8px;font-weight:600}
+.flash{min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:8px;cursor:pointer;user-select:none}
+.flash .term{font-size:1.7rem;font-weight:700;direction:ltr;color:var(--accent)}
+.opt{display:block;width:100%;text-align:left;direction:ltr;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{background:var(--good-soft);border-color:var(--good)}
+.opt.no{background:var(--bad-soft);border-color:var(--bad)}
+.qtext{direction:ltr;text-align:left;font-weight:500;margin-bottom:12px}
+.expl{background:var(--accent-soft);border-radius:10px;padding:10px 14px;margin:10px 0}
+.prog{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}.prog i{display:block;height:100%;background:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:start;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.e{direction:ltr;text-align:left;font-weight:600}
+.scroll{overflow-x:auto}
+.note{font-size:.88rem;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:20px 0 36px;text-align:center;color:var(--muted);font-size:.9rem}
+footer b{color:var(--gold)}
+.qtext{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.need{display:inline-block;background:var(--gold-soft);color:var(--gold);font-weight:700;border-radius:8px;padding:0 10px;margin:0 0 8px}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.enraw{direction:ltr;text-align:left;margin-top:6px}
+.vis{margin:12px 0}
+.vs{display:block;width:100%;max-width:460px;height:auto;margin:0 auto;background:var(--bg);border-radius:12px;padding:6px}
+.cap{font-size:.9rem;color:var(--muted);text-align:center;margin-top:6px}
+.sv-t{fill:var(--ink);font-size:12.5px;font-weight:600}.sv-m{fill:var(--muted);font-size:11px}
+.sv-b{fill:var(--card);stroke:var(--accent);stroke-width:1.5}.sv-g{fill:var(--good-soft);stroke:var(--good);stroke-width:1.5}
+.sv-y{fill:var(--gold-soft);stroke:var(--gold);stroke-width:1.5}.sv-r{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.5}
+.sv-l{stroke:var(--muted);stroke-width:1.6;fill:none}.sv-gl{stroke:var(--good)}.sv-badl{stroke:var(--bad)}.sv-ar{fill:var(--muted)}
+.sv-ax{stroke:var(--line);stroke-width:1.4}.sv-c1{stroke:var(--accent);stroke-width:2.4}.sv-c2{stroke:var(--bad);stroke-width:2.4}
+.sv-acc{fill:var(--accent);font-size:11.5px;font-weight:700}.sv-bad{fill:var(--bad);font-size:11.5px;font-weight:700}
+.sv-pa{fill:var(--accent)}.sv-pb{fill:var(--gold)}
+.sv-hl{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}.sv-hl2{fill:none;stroke:var(--gold);stroke-width:2;stroke-dasharray:4 3}
+.mn{background:var(--accent-soft);border-inline-start:4px solid var(--accent);border-radius:8px;padding:8px 12px;margin-top:10px}
+.mn b{color:var(--accent)}
+@media (max-width:480px){.day{grid-template-columns:52px 1fr}.brand h1{font-size:1.15rem}}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .4s}}
+.vis{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px;font-size:.85rem}
+.vis .pill,.vis a{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 12px;font-weight:700;text-decoration:none;border:1px solid var(--accent)}
+.vis b{font-size:1.05rem}
+</style>
+</head>
+<body class="m-both">
+<header>
+  <div class="wrap top">
+    <div class="brand">
+      <h1>مدرّب شارة مهندس الذكاء الاصطناعي من الصفر إلى الاجتياز</h1>
+      <div class="sub">SDAIA AI Engineer Badge Coach: from zero to pass</div>
+      <span class="by">إعداد: زينب عيسى العقيلي</span>
+      <div class="vis" aria-live="polite">
+        <span class="pill" id="visU" title="عدد الزوار المسجّلين">👥 الزوّار: <b>--</b></span>
+        <span class="pill" id="visT" title="إجمالي مرات فتح الموقع">👁 الزيارات: <b>--</b></span>
+        <a href="cheat.pdf" target="_blank" rel="noopener">📄 ورقة المراجعة PDF</a>
+      </div>
+    </div>
+    <div class="count" aria-live="polite"><b id="days">--</b><span id="daysLbl">يوم على اختبار<br>5 ديسمبر</span></div>
+  </div>
+</header>
+<nav aria-label="الأقسام">
+  <div class="wrap" role="tablist">
+    <button class="tab" role="tab" data-tab="plan">الخطة</button>
+    <button class="tab" role="tab" data-tab="learn">المذاكرة</button>
+    <button class="tab" role="tab" data-tab="cards">بطاقات المصطلحات</button>
+    <button class="tab" role="tab" data-tab="quiz">الاختبارات</button>
+    <button class="tab" role="tab" data-tab="exam">استراتيجية الاختبار</button>
+    <div class="langs" role="group" aria-label="لغة العرض">
+      <button data-m="both" aria-pressed="true">عربي + EN</button>
+      <button data-m="ar" aria-pressed="false">عربي</button>
+      <button data-m="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</nav>
+<main class="wrap" id="view"></main>
+<footer>
+  <div class="wrap">
+    <div>إعداد <b>زينب عيسى العقيلي</b> · Prepared by <b>Zainab Issa Al-Aqeeli</b></div>
+    <div class="note">مادة مذاكرة مجتمعية غير رسمية ولا ترتبط بسدايا. بنية الاختبار والأوزان من الإنفوغرافيك الرسمي للشارة، وما عداها من تجارب من اختبروا. راجعي المصادر الرسمية دائمًا.</div>
+  </div>
+</footer>
+
+<script>
+/* ---------- helpers ---------- */
+var $ = function(s,r){return (r||document).querySelector(s)};
+var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function bi(en,ar,cls){return '<div class="pair '+(cls||'')+'"><span class="en" dir="ltr">'+en+'</span><span class="ar">'+ar+'</span></div>'}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var S={done:{},plan:{},best:{},wrong:{},mode:'both'};
+try{var raw=localStorage.getItem('sdaia-coach-v1');if(raw){S=Object.assign(S,JSON.parse(raw))}}catch(e){}
+function save(){try{localStorage.setItem('sdaia-coach-v1',JSON.stringify(S))}catch(e){}}
+function copyText(t,btn){
+  var ok=function(){var o=btn.textContent;btn.textContent='تم النسخ، الصقيه في المحادثة';setTimeout(function(){btn.textContent=o},2200)};
+  try{navigator.clipboard.writeText(t).then(ok,function(){fallback()})}catch(e){fallback()}
+  function fallback(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){btn.textContent='انسخي النص يدويًا'}document.body.removeChild(ta)}
+}
+
+/* ---------- content ---------- */
+var D=[
+{id:'d1',n:'D1',w:17.3,en:'Data, ML Foundations & Model Evaluation',ar:'أسس البيانات وتعلم الآلة وتقييم النماذج',L:[
+ {t:['Data quality, cleaning & features','جودة البيانات وتنظيفها والخصائص'],p:[
+  ['Data types: structured (tables), unstructured (text, images), time-series. Bad data gives bad models, so quality comes first.','أنواع البيانات: منظمة (جداول) وغير منظمة (نص وصور) وسلاسل زمنية. البيانات السيئة تعطي نموذجًا سيئًا، فالجودة أولًا.'],
+  ['Missing values: drop rows if few, or impute (mean for symmetric data, median for skewed data, or a model).','القيم المفقودة: احذفي الصفوف إن كانت قليلة، أو عوّضيها (المتوسط للبيانات المتماثلة، الوسيط للمنحرفة، أو بنموذج).'],
+  ['Outliers: detect with IQR or z-score. Do not delete blindly: in fraud detection the outlier is the signal.','القيم الشاذة: تُكتشف بـ IQR أو z-score. لا تحذفيها بشكل أعمى، ففي كشف الاحتيال الشاذ هو المطلوب.'],
+  ['Feature engineering: scaling, one-hot encoding, log transforms, new combined features. Feature selection removes noisy or redundant features.','هندسة الخصائص: تحجيم وترميز one-hot وتحويل لوغاريتمي وخصائص جديدة. اختيار الخصائص يحذف المشوّش والمكرر.']],
+  x:['Fit scalers and imputers on the training set only, then apply to validation and test.','درّبي المحجِّم والمعوِّض على بيانات التدريب فقط ثم طبّقيه على التحقق والاختبار.']},
+ {t:['Splitting, leakage & class imbalance','تقسيم البيانات والتسريب وعدم التوازن'],p:[
+  ['Train learns, validation tunes, test is touched once at the end. Think: practice, mock exam, real exam.','التدريب للتعلم، والتحقق للضبط، والاختبار يُستخدم مرة واحدة في النهاية. تخيّلي: تدريب ثم اختبار تجريبي ثم الاختبار الحقيقي.'],
+  ['k-fold cross-validation gives a stable estimate on small datasets. Time-series: split by time, never shuffle.','التحقق المتقاطع k-fold يعطي تقديرًا مستقرًا للبيانات الصغيرة. السلاسل الزمنية: قسّمي حسب الزمن ولا تخلطي.'],
+  ['Data leakage: information from outside training (future data, test data, or a feature that encodes the label) sneaks in. Results look great and fail in production.','تسريب البيانات: معلومات من خارج التدريب (بيانات مستقبلية أو الاختبار أو خاصية تكشف الهدف) تتسلل. النتائج ممتازة ثم تفشل في الإنتاج.'],
+  ['Class imbalance: accuracy is misleading. Use resampling (SMOTE), class weights, a better threshold, and PR-AUC, recall, F1.','عدم توازن الفئات: الدقة مضللة. استخدمي إعادة العينة (SMOTE) وأوزان الفئات وضبط العتبة ومقاييس PR-AUC وrecall وF1.']],
+  x:['Suspiciously perfect score means look for leakage first.','نتيجة مثالية بشكل مريب تعني ابحثي عن التسريب أولًا.']},
+ {t:['Learning paradigms & classic algorithms','أنماط التعلم والخوارزميات الكلاسيكية'],p:[
+  ['Supervised: labeled data (classification, regression). Unsupervised: no labels (clustering, dimensionality reduction like PCA). Reinforcement: agent learns from rewards.','الإشرافي: بيانات معنونة (تصنيف وانحدار). غير الإشرافي: بلا عناوين (تجميع وتقليل أبعاد مثل PCA). المعزز: وكيل يتعلم من المكافآت.'],
+  ['Linear regression predicts numbers; logistic regression predicts class probability. Decision trees are interpretable.','الانحدار الخطي يتنبأ بأرقام، واللوجستي يتنبأ باحتمال فئة. أشجار القرار سهلة التفسير.'],
+  ['Random Forest = many trees in parallel (bagging, lowers variance). Boosting (XGBoost) = trees in sequence, each fixing earlier errors (lowers bias). Often best on tabular data.','الغابة العشوائية = أشجار كثيرة بالتوازي (bagging يقلل التباين). التعزيز (XGBoost) = أشجار متتابعة تصلح أخطاء السابقة (يقلل الانحياز). غالبًا الأفضل للبيانات الجدولية.'],
+  ['SVM finds the widest margin. KNN classifies by nearest neighbours (slow at prediction). Naive Bayes is fast, good for text. K-means groups data into k clusters.','SVM يبحث عن أوسع هامش. KNN يصنف بأقرب الجيران (بطيء عند التنبؤ). Naive Bayes سريع ومناسب للنص. K-means يجمّع البيانات في k مجموعة.']],
+  x:['For tabular data, tree ensembles usually beat deep learning. Pick the simplest model that meets the requirement.','للبيانات الجدولية غالبًا تتفوق نماذج الأشجار على التعلم العميق. اختاري أبسط نموذج يحقق المطلوب.']},
+ {t:['Bias-variance, regularization & tuning','الانحياز والتباين والتنظيم والضبط'],p:[
+  ['Underfitting (high bias): poor on train AND validation. Fix: more capacity, better features, less regularization.','نقص التكيّف (انحياز عالٍ): سيئ على التدريب والتحقق معًا. الحل: نموذج أقوى وخصائص أفضل وتنظيم أقل.'],
+  ['Overfitting (high variance): great on train, poor on validation. Fix: more data, regularization, simpler model, dropout, early stopping.','فرط التكيّف (تباين عالٍ): ممتاز على التدريب وضعيف على التحقق. الحل: بيانات أكثر وتنظيم ونموذج أبسط وdropout وإيقاف مبكر.'],
+  ['L1 (Lasso) pushes weights to zero, so it selects features. L2 (Ridge) shrinks weights smoothly.','L1 (Lasso) تدفع الأوزان إلى الصفر فتختار الخصائص. L2 (Ridge) تقلّص الأوزان تدريجيًا.'],
+  ['Gradient descent moves weights downhill on the loss. Learning rate too high: diverges. Too low: very slow. Tune hyperparameters (grid, random, Bayesian) on validation data.','الانحدار التدرجي يحرّك الأوزان نزولًا على دالة الخسارة. معدل تعلم عالٍ: يتباعد. منخفض: بطيء جدًا. اضبطي المعاملات الفائقة (grid وrandom وBayesian) على بيانات التحقق.']],
+  x:['Compare train error and validation error first. That diagnoses the problem.','قارني خطأ التدريب بخطأ التحقق أولًا، فهذا يشخّص المشكلة.']},
+ {t:['Evaluation metrics','مقاييس التقييم'],p:[
+  ['Confusion matrix: TP, FP, TN, FN. Precision = TP/(TP+FP): of predicted positives, how many are right. Recall = TP/(TP+FN): of real positives, how many found. F1 = harmonic mean.','مصفوفة الالتباس: TP وFP وTN وFN. Precision = من المتوقع إيجابيًا كم صحيح. Recall = من الإيجابيين الحقيقيين كم اكتشفنا. F1 = المتوسط التوافقي.'],
+  ['Missing a positive is costly (cancer, fraud): maximize recall. False alarms are costly (blocking legit email): maximize precision.','تفويت حالة إيجابية مكلف (سرطان، احتيال): ارفعي recall. الإنذار الكاذب مكلف (حجب بريد سليم): ارفعي precision.'],
+  ['ROC-AUC is threshold-independent. With heavy imbalance prefer the Precision-Recall curve.','ROC-AUC لا يعتمد على العتبة. مع عدم التوازن الشديد فضّلي منحنى Precision-Recall.'],
+  ['Regression: MAE (robust, same units), MSE/RMSE (punishes big errors), R². Clustering: silhouette score. Calibration: do predicted probabilities match reality?','الانحدار: MAE (متين وبنفس الوحدة) وMSE/RMSE (يعاقب الأخطاء الكبيرة) وR². التجميع: silhouette. المعايرة: هل الاحتمالات المتوقعة تطابق الواقع؟'],
+  ['A/B testing compares two versions with a real traffic split. A result is significant if the p-value is below the chosen threshold (often 0.05). Nested CV gives an unbiased estimate when tuning and evaluating together.','اختبار A/B يقارن نسختين بتقسيم حركة حقيقية. النتيجة دالة إحصائيًا إن كانت p-value أقل من العتبة (غالبًا 0.05). التحقق المتداخل يعطي تقديرًا غير متحيز عند الضبط والتقييم معًا.']],
+  x:['Always translate the business cost of FN vs FP into precision vs recall.','ترجمي دائمًا كلفة FN مقابل FP في الأعمال إلى precision مقابل recall.']}
+]},
+{id:'d2',n:'D2',w:16.7,en:'Core AI, Deep Learning & Generative AI',ar:'أساسيات الذكاء الاصطناعي والتعلم العميق والذكاء التوليدي',L:[
+ {t:['Neural network basics','أساسيات الشبكات العصبية'],p:[
+  ['A neuron = weighted sum + bias + activation. Layers stacked make a deep network (MLP).','العصبون = مجموع موزون + انحياز + دالة تفعيل. تكديس الطبقات يصنع شبكة عميقة (MLP).'],
+  ['Activations: ReLU (default for hidden layers), sigmoid (binary output), softmax (multi-class output), tanh.','دوال التفعيل: ReLU (الافتراضي للطبقات المخفية) وsigmoid (مخرج ثنائي) وsoftmax (مخرج متعدد الفئات) وtanh.'],
+  ['Backpropagation uses the chain rule to compute gradients of the loss for every weight. Loss: cross-entropy for classification, MSE for regression.','الانتشار العكسي يستخدم قاعدة السلسلة لحساب تدرجات الخسارة لكل وزن. الخسارة: cross-entropy للتصنيف وMSE للانحدار.'],
+  ['Optimizers: SGD, Adam (adaptive, common default). Initialization (Xavier, He) keeps signals stable.','المحسّنات: SGD وAdam (تكيفي وشائع كافتراضي). تهيئة الأوزان (Xavier وHe) تحافظ على استقرار الإشارات.']],
+  x:['Output layer decides activation: sigmoid = 2 classes, softmax = many classes, none = regression.','طبقة المخرجات تحدد التفعيل: sigmoid لفئتين، softmax لفئات متعددة، بلا تفعيل للانحدار.']},
+ {t:['Training problems & regularization','مشاكل التدريب والتنظيم'],p:[
+  ['Vanishing gradients: early layers stop learning (typical with sigmoid in deep nets). Fixes: ReLU, residual connections, batch norm, LSTM.','تلاشي التدرجات: الطبقات الأولى تتوقف عن التعلم (شائع مع sigmoid في الشبكات العميقة). الحلول: ReLU وروابط residual وbatch norm وLSTM.'],
+  ['Exploding gradients: values blow up. Fix: gradient clipping, careful initialization.','انفجار التدرجات: القيم تتضخم. الحل: gradient clipping وتهيئة جيدة.'],
+  ['Dropout randomly switches off neurons during training. Batch/Layer normalization stabilizes training. Early stopping halts when validation loss stops improving.','Dropout يطفئ عصبونات عشوائيًا أثناء التدريب. التطبيع (Batch/Layer) يثبّت التدريب. الإيقاف المبكر يوقف عند توقف تحسن خسارة التحقق.']],
+  x:['Deep network that stops improving early in training: think vanishing gradients.','شبكة عميقة لا تتحسن مبكرًا: فكّري في تلاشي التدرجات.']},
+ {t:['CNNs and RNNs','الشبكات الالتفافية والتكرارية'],p:[
+  ['CNN: filters slide over an image to detect local patterns (edges, shapes) with shared weights. Pooling reduces size. Best for images.','CNN: مرشحات تنزلق على الصورة لاكتشاف أنماط محلية (حواف وأشكال) بأوزان مشتركة. التجميع (pooling) يقلل الحجم. الأفضل للصور.'],
+  ['ResNet adds skip connections so very deep networks train well. VGG, Inception, EfficientNet are other vision families. Transfer learning reuses a pretrained model when you have little data.','ResNet يضيف skip connections لتدريب شبكات عميقة جدًا. VGG وInception وEfficientNet عائلات رؤية أخرى. التعلم بالنقل يعيد استخدام نموذج مدرّب عند قلة البيانات.'],
+  ['RNN processes sequences step by step with memory. LSTM and GRU use gates to keep long-term memory. Limitation: sequential, slow, weak on very long text.','RNN يعالج التسلسلات خطوة بخطوة مع ذاكرة. LSTM وGRU تستخدم بوابات للذاكرة الطويلة. القيد: تسلسلي وبطيء وضعيف مع النصوص الطويلة جدًا.']],
+  x:['Small image dataset: transfer learning from a pretrained CNN is the usual answer.','بيانات صور قليلة: التعلم بالنقل من CNN مدرّب مسبقًا هو الجواب المعتاد.']},
+ {t:['Transformers & LLM mechanics','الترانسفورمر وآلية النماذج اللغوية'],p:[
+  ['Self-attention lets every token look at every other token. Q (query), K (key), V (value): Q matches K to decide how much of V to take. Multi-head = several attention views in parallel.','الانتباه الذاتي يجعل كل رمز ينظر إلى كل الرموز. Q (استعلام) يطابق K (مفتاح) ليحدد كم يأخذ من V (قيمة). متعدد الرؤوس = عدة زوايا انتباه بالتوازي.'],
+  ['Positional encoding is needed because attention alone ignores word order. Transformers train in parallel, which is why they replaced RNNs.','الترميز الموضعي ضروري لأن الانتباه وحده لا يعرف ترتيب الكلمات. الترانسفورمر يتدرب بالتوازي ولهذا حلّ محل RNN.'],
+  ['Encoder-only (BERT): understanding, classification. Decoder-only (GPT): text generation. Encoder-decoder (T5): translation, summarization.','Encoder فقط (BERT): فهم وتصنيف. Decoder فقط (GPT): توليد نص. Encoder-decoder (T5): ترجمة وتلخيص.'],
+  ['Tokenization splits text into subword tokens. Embeddings turn tokens into vectors. Context window = max tokens per request; attention cost grows quickly with length.','التقطيع (tokenization) يقسم النص إلى رموز فرعية. التضمينات تحوّل الرموز إلى متجهات. نافذة السياق = أقصى عدد رموز في الطلب، وتكلفة الانتباه تزيد بسرعة مع الطول.']],
+  x:['“Understanding or classifying text” points to encoder models, “generating” points to decoder models.','“فهم أو تصنيف نص” يشير إلى encoder، و“توليد” يشير إلى decoder.']},
+ {t:['Adapting LLMs: prompt, RAG, fine-tune','تكييف النماذج اللغوية: أوامر وRAG وضبط دقيق'],p:[
+  ['Training stages: pre-training (general language), fine-tuning, instruction tuning (follow instructions), RLHF (align with human preferences).','مراحل التدريب: تدريب مسبق (لغة عامة) ثم ضبط دقيق ثم ضبط التعليمات ثم RLHF (مواءمة مع تفضيلات البشر).'],
+  ['Prompt engineering is cheapest: clear instructions, few-shot examples, chain-of-thought. Try it first.','هندسة الأوامر أرخص حل: تعليمات واضحة وأمثلة few-shot وسلسلة تفكير. جرّبيها أولًا.'],
+  ['RAG retrieves fresh or private documents and adds them to the prompt. Use it for up-to-date or company knowledge, and it reduces hallucination.','RAG يسترجع مستندات حديثة أو خاصة ويضيفها للأمر. استخدميه للمعرفة الحديثة أو الخاصة بالجهة، ويقلل الهلوسة.'],
+  ['Fine-tuning changes behavior, style or format, not facts. PEFT/LoRA/QLoRA train only small adapters, so it is cheap and fits limited GPUs.','الضبط الدقيق يغيّر السلوك والأسلوب والصيغة وليس الحقائق. PEFT وLoRA وQLoRA تدرّب محوّلات صغيرة فقط، فهي رخيصة وتناسب GPU محدودة.']],
+  x:['Decision order: prompt first, then RAG for knowledge, then fine-tune for behavior.','ترتيب القرار: الأوامر أولًا ثم RAG للمعرفة ثم الضبط الدقيق للسلوك.']},
+ {t:['RAG details, generative families & evaluation','تفاصيل RAG وعائلات التوليد والتقييم'],p:[
+  ['RAG pipeline: chunk documents, embed, store in a vector database (ANN search), retrieve top-k, generate the answer. Chunk size and overlap affect quality. Hybrid search = keyword + vector.','مسار RAG: تقطيع المستندات ثم تضمين ثم تخزين في قاعدة متجهية (بحث ANN) ثم استرجاع أفضل k ثم توليد الإجابة. حجم القطعة والتداخل يؤثران. البحث الهجين = كلمات + متجهات.'],
+  ['GAN: generator vs discriminator (risk: mode collapse). VAE: learns a latent space. Diffusion: learns to remove noise step by step, very high image quality.','GAN: مولّد ضد مميّز (خطر: mode collapse). VAE: يتعلم فضاءً كامنًا. الانتشار: يتعلم إزالة الضوضاء خطوة بخطوة وجودة صور عالية.'],
+  ['BLEU: translation. ROUGE: summarization. Perplexity: language model quality (lower is better).','BLEU: للترجمة. ROUGE: للتلخيص. Perplexity: لجودة النموذج اللغوي (الأقل أفضل).'],
+  ['Hallucination = confident but wrong output. Reduce with RAG grounding, low temperature, guardrails, citations, human review.','الهلوسة = مخرج واثق لكنه خاطئ. تُقلَّل بـ RAG وحرارة منخفضة وضوابط ومراجع ومراجعة بشرية.']],
+  x:['Answer must be grounded in company documents: RAG, not a bigger model.','الإجابة يجب أن تستند لمستندات الجهة: RAG وليس نموذجًا أكبر.']}
+]},
+{id:'d3',n:'D3',w:14.0,en:'AI Software Engineering & Integration',ar:'هندسة برمجيات الذكاء الاصطناعي والتكامل',L:[
+ {t:['Code quality, Git & testing','جودة الكود وGit والاختبار'],p:[
+  ['Clean, modular code: small functions, clear names, DRY, separation of concerns. Design patterns (factory, strategy, observer) solve common structure problems.','كود نظيف ومعياري: دوال صغيرة وأسماء واضحة وعدم التكرار وفصل المسؤوليات. أنماط التصميم (factory وstrategy وobserver) تحل مشاكل بنيوية شائعة.'],
+  ['Git: feature branches, pull requests, code review before merging into main.','Git: فروع للميزات وطلبات دمج ومراجعة كود قبل الدمج في الفرع الرئيسي.'],
+  ['Testing: unit tests (one function), integration tests (components together), model tests (data validation, minimum metric thresholds, regression against previous model).','الاختبار: وحدة (دالة واحدة) وتكامل (مكونات معًا) واختبارات النموذج (التحقق من البيانات وحدود دنيا للمقاييس ومقارنة بالنموذج السابق).'],
+  ['Documentation and API contracts (OpenAPI) let teams integrate without guessing.','التوثيق وعقود الواجهات (OpenAPI) تتيح للفرق التكامل دون تخمين.']],
+  x:['ML code needs data tests and model tests, not only unit tests.','كود ML يحتاج اختبارات للبيانات والنموذج وليس اختبارات الوحدة فقط.']},
+ {t:['APIs and authentication','الواجهات والمصادقة'],p:[
+  ['REST: resources + HTTP verbs, stateless, the common default. GraphQL: client asks exactly the fields it needs (fixes over/under-fetching). gRPC: binary Protobuf over HTTP/2, fast, typed, streaming, ideal for internal microservices.','REST: موارد وأفعال HTTP وبلا حالة، الخيار الشائع. GraphQL: العميل يطلب الحقول التي يريدها فقط (يحل الجلب الزائد/الناقص). gRPC: ثنائي Protobuf فوق HTTP/2 سريع ومحدد الأنواع ويدعم البث، مثالي للخدمات الداخلية.'],
+  ['OAuth2 = delegated authorization (let an app access data without sharing the password). JWT = signed token carrying claims, stateless. API key = simple identification, not strong authentication.','OAuth2 = تفويض (يسمح لتطبيق بالوصول للبيانات دون مشاركة كلمة المرور). JWT = رمز موقّع يحمل بيانات بلا حالة. مفتاح API = تعريف بسيط وليس مصادقة قوية.'],
+  ['Webhook = the server pushes an event to your URL when something happens, instead of you polling.','Webhook = الخادم يدفع حدثًا إلى رابطك عند وقوعه بدل أن تستعلمي باستمرار.']],
+  x:['Match the need: flexible fields = GraphQL, low-latency internal = gRPC, public simple = REST.','طابقي الحاجة: حقول مرنة = GraphQL، داخلي منخفض الزمن = gRPC، عام وبسيط = REST.']},
+ {t:['Messaging, microservices & caching','الرسائل والخدمات المصغّرة والتخزين المؤقت'],p:[
+  ['Kafka: distributed event log, huge throughput, replay, streaming pipelines. RabbitMQ: message broker with routing and task queues.','Kafka: سجل أحداث موزع بإنتاجية هائلة وإعادة قراءة وللبث. RabbitMQ: وسيط رسائل بتوجيه وطوابير مهام.'],
+  ['Microservices: small independently deployable services (scale and release separately) at the cost of complexity. Event-driven design decouples producers and consumers.','الخدمات المصغّرة: خدمات صغيرة تُنشر وتتوسع باستقلال مقابل تعقيد أكبر. المعمارية الموجهة بالأحداث تفصل المنتج عن المستهلك.'],
+  ['Batch processing handles large data on a schedule. Streaming handles events in near real time.','المعالجة الدفعية تعالج بيانات كبيرة بجدول زمني. المتدفقة تعالج الأحداث شبه فوريًا.'],
+  ['Caching cuts latency and cost for repeated requests. Hard part: invalidation (stale data).','التخزين المؤقت يقلل الزمن والتكلفة للطلبات المتكررة. الصعوبة: إبطال البيانات القديمة.']],
+  x:['“Replay” or “high-volume stream” → Kafka. “Task queue / routing” → RabbitMQ.','“إعادة قراءة” أو “تدفق ضخم” ← Kafka. “طابور مهام/توجيه” ← RabbitMQ.']},
+ {t:['Frameworks, serving & containers','الأطر والتقديم والحاويات'],p:[
+  ['scikit-learn: classical ML. PyTorch: flexible, dominant in research. TensorFlow/Keras: strong production ecosystem. LangChain: orchestrates LLM apps (chains, agents, tools). LlamaIndex: indexing data for RAG.','scikit-learn: تعلم آلة كلاسيكي. PyTorch: مرن ومهيمن في الأبحاث. TensorFlow/Keras: منظومة إنتاج قوية. LangChain: لتنسيق تطبيقات LLM (سلاسل ووكلاء وأدوات). LlamaIndex: لفهرسة البيانات لـ RAG.'],
+  ['Model serving: expose the model behind an API (FastAPI, TF Serving, TorchServe, Triton).','تقديم النموذج: إتاحته خلف واجهة API (FastAPI وTF Serving وTorchServe وTriton).'],
+  ['Docker packages code + dependencies into a container, so it runs the same everywhere. Use virtual environments and pinned dependencies for reproducibility.','Docker يحزم الكود مع الاعتماديات في حاوية فتعمل بنفس الشكل في كل مكان. استخدمي بيئات افتراضية وإصدارات مثبتة لقابلية الإعادة.']],
+  x:['“Works on my machine” is solved by containers.','عبارة “يعمل على جهازي” حلّها الحاويات.']}
+]},
+{id:'d4',n:'D4',w:18.0,en:'MLOps, LLMOps, Deployment & Reliability',ar:'عمليات تعلم الآلة والنماذج اللغوية والنشر والموثوقية',star:true,L:[
+ {t:['ML lifecycle, tracking & registry','دورة الحياة والتتبع والسجل'],p:[
+  ['Lifecycle: problem, data, train, evaluate, deploy, monitor, retrain. It is a loop, not a line.','الدورة: مشكلة ثم بيانات ثم تدريب ثم تقييم ثم نشر ثم مراقبة ثم إعادة تدريب. إنها حلقة وليست خطًا.'],
+  ['Experiment tracking (MLflow, Weights & Biases) records parameters, metrics and artifacts. Model registry stores versions and stages (staging, production, archived).','تتبع التجارب (MLflow وWeights & Biases) يسجل المعاملات والمقاييس والمخرجات. سجل النماذج يحفظ الإصدارات والمراحل (تجريبي وإنتاج وأرشيف).'],
+  ['Feature store: one definition of features for training and serving, preventing training-serving skew.','مخزن الخصائص: تعريف واحد للخصائص للتدريب والتقديم، يمنع انحراف التدريب عن التقديم.'],
+  ['Reproducibility = versioned code + data (DVC) + environment + config + random seed.','قابلية الإعادة = كود + بيانات مُصدّرة (DVC) + بيئة + إعدادات + بذرة عشوائية.']],
+  x:['Features computed differently offline and online: feature store.','خصائص تُحسب بشكل مختلف في التدريب والتقديم: مخزن الخصائص.']},
+ {t:['CI/CD/CT & Infrastructure as Code','التكامل والنشر والتدريب المستمر والبنية ككود'],p:[
+  ['CI: automatically build and test every change. CD: automatically deliver to environments. CT: continuous training, retrain when new data or drift arrives.','CI: بناء واختبار كل تغيير تلقائيًا. CD: تسليم تلقائي للبيئات. CT: تدريب مستمر عند وصول بيانات جديدة أو انجراف.'],
+  ['Tools: GitHub Actions, GitLab CI, Jenkins for CI/CD; Airflow, Kubeflow for pipelines.','الأدوات: GitHub Actions وGitLab CI وJenkins للـ CI/CD؛ Airflow وKubeflow للمسارات.'],
+  ['Infrastructure as Code (Terraform, CloudFormation): declare infrastructure in versioned files, repeatable and reviewable.','البنية التحتية ككود (Terraform وCloudFormation): تعريف البنية في ملفات مُصدّرة قابلة للتكرار والمراجعة.']],
+  x:['Manual steps are the enemy: automate, version, repeat.','الخطوات اليدوية هي العدو: أتمتة وإصدارات وتكرار.']},
+ {t:['Deployment strategies','استراتيجيات النشر'],p:[
+  ['Blue-green: two identical environments, switch all traffic at once, instant rollback, double cost.','الأزرق-الأخضر: بيئتان متطابقتان، تحويل كل الحركة دفعة واحدة، تراجع فوري، تكلفة مضاعفة.'],
+  ['Canary: send a small share (say 5%) of real traffic to the new version, grow if healthy. Limits blast radius.','Canary: توجيه نسبة صغيرة (مثل 5%) من الحركة الحقيقية للإصدار الجديد ثم التوسع إن كان سليمًا. يحدّ من أثر الخطأ.'],
+  ['Shadow: new model receives a copy of live traffic but its outputs are hidden. Zero user risk, used to validate.','Shadow: النموذج الجديد يستقبل نسخة من الحركة الحية لكن مخرجاته مخفية. بلا خطر على المستخدم، للتحقق.'],
+  ['A/B test: split users between versions to compare a business metric. Rolling update: replace instances gradually.','اختبار A/B: تقسيم المستخدمين بين نسختين لمقارنة مؤشر أعمال. التحديث المتدرج: استبدال النسخ تدريجيًا.'],
+  ['Batch inference: scheduled, high volume, no latency need. Online inference: real time per request. Edge: on-device for privacy, offline use, low latency.','الاستدلال الدفعي: مجدول وحجم كبير بلا حاجة لزمن قصير. الفوري: لحظي لكل طلب. الحافة: على الجهاز للخصوصية والعمل دون اتصال وزمن منخفض.']],
+  x:['No user impact allowed → shadow. Limit risk gradually → canary. Instant switch back → blue-green.','ممنوع أي أثر على المستخدم ← shadow. تقليل المخاطرة تدريجيًا ← canary. رجوع فوري ← blue-green.']},
+ {t:['Monitoring, drift & reliability','المراقبة والانجراف والموثوقية'],p:[
+  ['Data drift: input distribution changes. Concept drift: the relationship between inputs and target changes (same inputs, different meaning). Detect with PSI, KS test, monitoring metrics.','انجراف البيانات: توزيع المدخلات يتغير. انجراف المفهوم: العلاقة بين المدخلات والهدف تتغير (نفس المدخلات بمعنى مختلف). يُكتشف بـ PSI واختبار KS ومراقبة المقاييس.'],
+  ['Operational metrics: latency (p95/p99), throughput, error rate. Logging and alerting turn problems into actions. Automated retraining can be triggered by drift or schedule.','مقاييس التشغيل: زمن الاستجابة (p95/p99) والإنتاجية ومعدل الأخطاء. التسجيل والتنبيه يحوّلان المشاكل إلى إجراءات. إعادة التدريب الآلية تُطلق بالانجراف أو بجدول.'],
+  ['SLI = what you measure. SLO = internal target for it (99.9% uptime). SLA = contract with consequences.','SLI = ما تقيسينه. SLO = الهدف الداخلي له (توافر 99.9%). SLA = عقد له عواقب.'],
+  ['High availability: redundancy and multiple zones. Fault tolerance: keep working during failures. Rollback: return quickly to the last good version.','التوافر العالي: تكرار ومناطق متعددة. تحمل الأعطال: الاستمرار أثناء الفشل. التراجع: العودة سريعًا لآخر إصدار سليم.']],
+  x:['Accuracy drops after the world changed with the same inputs: concept drift, so retrain.','تراجع الدقة بعد تغير الواقع مع نفس المدخلات: انجراف مفهوم، فأعيدي التدريب.']},
+ {t:['LLMOps & model optimization','LLMOps وتحسين النماذج'],p:[
+  ['Version prompts like code. Evaluate LLMs with golden datasets, LLM-as-judge and human review. Guardrails filter unsafe inputs and outputs.','أصدري الأوامر كالكود. قيّمي النماذج اللغوية بمجموعات ذهبية وLLM-as-judge ومراجعة بشرية. الضوابط (guardrails) تفلتر المدخلات والمخرجات غير الآمنة.'],
+  ['Cost levers: shorter prompts, response and semantic caching, routing easy queries to smaller models, batching.','أدوات خفض التكلفة: أوامر أقصر وتخزين الإجابات (دلالي أيضًا) وتوجيه الأسئلة السهلة لنماذج أصغر ودفعات.'],
+  ['Quantization: lower numeric precision (FP16, INT8, INT4) → smaller and faster, slight accuracy loss. Pruning: remove unimportant weights. Distillation: a small student learns from a large teacher.','التكميم: دقة رقمية أقل (FP16 وINT8 وINT4) ← أصغر وأسرع مع خسارة بسيطة. التقليم: حذف الأوزان غير المهمة. التقطير: طالب صغير يتعلم من معلم كبير.']],
+  x:['Need smaller/faster with minimal retraining: quantization. Want a compact model that imitates a big one: distillation.','تريدين أصغر وأسرع دون إعادة تدريب كبيرة: تكميم. تريدين نموذجًا صغيرًا يقلّد كبيرًا: تقطير.']}
+]},
+{id:'d5',n:'D5',w:12.7,en:'Architecture, Infrastructure, Performance & Scalability',ar:'المعمارية والبنية التحتية والأداء وقابلية التوسع',L:[
+ {t:['Platforms and where to run','المنصات ومكان التشغيل'],p:[
+  ['Managed ML platforms: AWS SageMaker, Azure ML, Google Vertex AI. They bundle training, registry, deployment and monitoring.','منصات ML مُدارة: AWS SageMaker وAzure ML وGoogle Vertex AI. تجمع التدريب والسجل والنشر والمراقبة.'],
+  ['On-premises: maximum control and data residency, high upfront cost. Cloud: elastic, pay-as-you-go. Hybrid: sensitive data local, bursts in the cloud.','محلي: تحكم أقصى وإقامة بيانات، وتكلفة مبدئية عالية. سحابي: مرن ودفع حسب الاستخدام. هجين: البيانات الحساسة محليًا والذروة في السحابة.'],
+  ['Data residency or regulation (for example Saudi personal data rules) can force local or in-country hosting.','إقامة البيانات أو اللوائح (مثل أنظمة البيانات الشخصية السعودية) قد تفرض استضافة محلية أو داخل المملكة.']],
+  x:['Regulatory or sovereignty constraint is usually the deciding clue.','قيد تنظيمي أو سيادة بيانات غالبًا هو القيد الحاسم.']},
+ {t:['Compute and distributed training','الحوسبة والتدريب الموزع'],p:[
+  ['GPU: general parallel hardware (CUDA), flexible. TPU: Google accelerator specialized for tensor math, large-scale training in Google Cloud.','GPU: عتاد متوازٍ عام (CUDA) ومرن. TPU: مسرّع من Google متخصص بالحسابات التنسورية للتدريب الكبير في Google Cloud.'],
+  ['Data parallelism: copy the model on many devices, split the data. Model parallelism: split the model itself when it does not fit in one device. Pipeline parallelism: split by layer stages.','توازي البيانات: نسخ النموذج على أجهزة وتقسيم البيانات. توازي النموذج: تقسيم النموذج نفسه إذا لم يتسع في جهاز. توازي المسار: تقسيم حسب مراحل الطبقات.'],
+  ['Mixed precision (FP16/BF16) speeds training and saves memory.','الدقة المختلطة (FP16/BF16) تسرّع التدريب وتوفر الذاكرة.']],
+  x:['Data too big: data parallel. Model too big: model parallel.','البيانات كبيرة: data parallel. النموذج كبير: model parallel.']},
+ {t:['Scaling, latency, Kubernetes & serverless','التوسع والزمن وKubernetes وبلا خوادم'],p:[
+  ['Vertical scaling: bigger machine (has a ceiling, single point of failure). Horizontal scaling: more machines behind a load balancer (needs stateless services).','التوسع الرأسي: جهاز أقوى (له سقف ونقطة فشل وحيدة). الأفقي: أجهزة أكثر خلف موزّع أحمال (يتطلب خدمات بلا حالة).'],
+  ['Auto-scaling adds or removes instances from metrics such as CPU or queue length. Watch cold starts.','التوسع التلقائي يضيف أو يزيل نسخًا حسب مقاييس مثل المعالج أو طول الطابور. انتبهي للبدء البارد.'],
+  ['Cut latency with: caching, request batching, quantization, smaller models, GPU inference, edge/CDN, model compilation.','لتقليل الزمن: تخزين مؤقت ودفعات طلبات وتكميم ونماذج أصغر واستدلال GPU وحافة/CDN وتحويل النموذج.'],
+  ['Kubernetes orchestrates containers: scheduling, scaling, self-healing. Serverless: pay per invocation, scales to zero, good for spiky light workloads, limited by time and cold starts.','Kubernetes ينسق الحاويات: جدولة وتوسع وإصلاح ذاتي. Serverless: دفع لكل استدعاء ويتوسع حتى الصفر، مناسب للأحمال الخفيفة المتقطعة، بقيود الزمن والبدء البارد.']],
+  x:['Unpredictable spiky light traffic: serverless. Steady heavy GPU inference: Kubernetes with autoscaling.','حركة خفيفة متقطعة لا يمكن توقعها: serverless. استدلال GPU ثقيل ومستمر: Kubernetes مع توسع تلقائي.']},
+ {t:['Data architecture & disaster recovery','معمارية البيانات والتعافي من الكوارث'],p:[
+  ['ETL: transform before loading (warehouse). ELT: load raw first, transform inside the platform (modern cloud).','ETL: تحويل قبل التحميل (مستودع). ELT: تحميل الخام أولًا ثم التحويل داخل المنصة (السحابة الحديثة).'],
+  ['Data lake: cheap raw storage, schema-on-read. Warehouse: curated structured data for BI, schema-on-write. Lakehouse: both in one.','بحيرة بيانات: تخزين خام رخيص وschema-on-read. مستودع: بيانات منظمة منسقة للتحليل وschema-on-write. Lakehouse: الاثنان معًا.'],
+  ['Disaster recovery: RPO = how much data loss is acceptable. RTO = how long downtime is acceptable. Backups, replication and multi-region meet them.','التعافي من الكوارث: RPO = كمية البيانات المسموح فقدها. RTO = مدة التوقف المسموحة. النسخ الاحتياطي والتكرار وتعدد المناطق تحقق ذلك.'],
+  ['End-to-end design: ingest → store → train → registry → serve → monitor → retrain.','تصميم شامل: استيعاب ثم تخزين ثم تدريب ثم سجل ثم تقديم ثم مراقبة ثم إعادة تدريب.']],
+  x:['RPO is about data, RTO is about time.','RPO عن البيانات، وRTO عن الوقت.']},
+ {t:['Capacity, latency and cost math (exam pattern)','حسابات السعة والزمن والتكلفة (نمط في الاختبار)'],p:[
+  ['Requirements matching: write the hard limits first (p95 latency, budget, peak load, data location, explainability). Cross out every option that fails any one of them. Among the rest, take the best on the target metric at the lowest cost.','مطابقة المتطلبات: اكتبي القيود الصارمة أولًا (زمن p95 والميزانية والحمل الأقصى وموقع البيانات وقابلية التفسير). اشطبي كل خيار يخالف واحدًا منها. من الباقي اختاري الأفضل في المقياس المستهدف بأقل تكلفة.'],
+  ['Batching trades latency for throughput. Pick the largest batch size whose p95 latency still meets the SLO, then size replicas: replicas = peak req/s ÷ throughput per replica, rounded up with headroom.','الدفعات تبادل الزمن بالإنتاجية. اختاري أكبر حجم دفعة يبقى معه زمن p95 ضمن الهدف، ثم احسبي النسخ: عدد النسخ = الحمل الأقصى ÷ إنتاجية النسخة الواحدة، مقرّبًا للأعلى مع هامش أمان.'],
+  ['GPU memory for LLM serving is additive: weights + runtime allocations + KV cache per session × concurrent sessions + operating reserve. If the total exceeds the card, cut concurrency or sequence length, quantize, or add memory.','ذاكرة GPU لخدمة النماذج اللغوية تُجمع: الأوزان + مخصصات التشغيل + KV cache لكل جلسة × عدد الجلسات + احتياطي تشغيلي. إن زاد المجموع عن الكرت: قلّلي التزامن أو طول التسلسل أو كمّمي أو زيدي الذاكرة.'],
+  ['Cost review: find waste (idle GPUs, oversized instances, repeated identical calls, long prompts), then reduce with right-sizing, autoscaling, caching, smaller models for easy traffic, reserved capacity for steady load.','مراجعة التكلفة: ابحثي عن الهدر (GPU خاملة ونسخ أكبر من اللازم واستدعاءات مكررة وأوامر طويلة)، ثم قلّليه بتحجيم مناسب وتوسع تلقائي وتخزين مؤقت ونماذج أصغر للحركة السهلة وسعة محجوزة للحمل الثابت.']],
+  x:['A fancier option that fails one hard requirement is always wrong, even with the best accuracy.','خيار أقوى يفشل في متطلب صارم واحد خاطئ دائمًا، حتى لو كانت دقته الأعلى.']}
+]},
+{id:'d6',n:'D6',w:14.7,en:'Responsible AI, Security & Governance',ar:'الذكاء الاصطناعي المسؤول والأمن والحوكمة',L:[
+ {t:['Bias and fairness','التحيز والعدالة'],p:[
+  ['Bias sources: historical, sampling, measurement, representation, label bias. A model can copy and amplify bias in the data.','مصادر التحيز: تاريخي وعينة وقياس وتمثيل وتحيز التسمية. النموذج قد ينسخ تحيز البيانات ويضخمه.'],
+  ['Fairness metrics: demographic parity (equal positive rate across groups), equal opportunity (equal recall), equalized odds (equal TPR and FPR). They can conflict, so choose by context.','مقاييس العدالة: demographic parity (نسبة إيجابية متساوية بين المجموعات) وequal opportunity (recall متساوٍ) وequalized odds (TPR وFPR متساويان). قد تتعارض، فاختاري حسب السياق.'],
+  ['Mitigate before training (rebalance data), during (fairness constraints), or after (adjust thresholds). Keep a human in the loop for high-stakes decisions.','العلاج قبل التدريب (إعادة موازنة البيانات) أو أثناءه (قيود عدالة) أو بعده (تعديل العتبات). أبقي إنسانًا في الحلقة للقرارات عالية الخطورة.']],
+  x:['Do not just remove the sensitive column: proxies (like postcode) leak it.','لا يكفي حذف العمود الحساس، فالبدائل (مثل الرمز البريدي) تسرّبه.']},
+ {t:['Explainability and documentation','قابلية التفسير والتوثيق'],p:[
+  ['SHAP: Shapley-value contribution of each feature, global and per-prediction. LIME: local surrogate model around one prediction.','SHAP: مساهمة كل خاصية بقيم Shapley عالميًا ولكل تنبؤ. LIME: نموذج بديل محلي حول تنبؤ واحد.'],
+  ['Model card: intended use, limits, metrics, risks. Datasheet: how a dataset was collected and its limits. Audit trails: who did what and when.','بطاقة النموذج: الاستخدام المقصود والحدود والمقاييس والمخاطر. صحيفة البيانات: كيف جُمعت البيانات وحدودها. سجلات التدقيق: من فعل ماذا ومتى.'],
+  ['Regulated or high-impact decisions need explanations a person can understand.','القرارات المنظمة أو عالية الأثر تحتاج تفسيرات يفهمها الإنسان.']],
+  x:['“Explain one decision to a customer or regulator” → SHAP or LIME.','“اشرحي قرارًا واحدًا لعميل أو جهة تنظيمية” ← SHAP أو LIME.']},
+ {t:['AI security threats','تهديدات أمن الذكاء الاصطناعي'],p:[
+  ['Adversarial examples: tiny crafted changes to inputs at inference cause wrong output. Data poisoning: corrupt training data. Model extraction: steal a model by querying it. Model inversion / membership inference: leak training data.','أمثلة عدائية: تغييرات صغيرة مصممة للمدخلات وقت الاستدلال تسبب خطأ. تسميم البيانات: إفساد بيانات التدريب. استخلاص النموذج: سرقته بالاستعلام. عكس النموذج/استدلال العضوية: تسريب بيانات التدريب.'],
+  ['Prompt injection: instructions hidden in user input (direct) or in retrieved documents and web pages (indirect) hijack the LLM.','حقن الأوامر: تعليمات مخفية في مدخل المستخدم (مباشر) أو في مستندات وصفحات مسترجعة (غير مباشر) تختطف النموذج.'],
+  ['Defenses: input validation, least-privilege tools, output filtering, guardrails, treat retrieved text as untrusted, human approval for risky actions, rate limiting, adversarial training.','الدفاعات: تحقق من المدخلات وأقل صلاحيات للأدوات وفلترة المخرجات وضوابط واعتبار النص المسترجع غير موثوق وموافقة بشرية للإجراءات الخطرة وتحديد المعدل وتدريب عدائي.']],
+  x:['Training time attack = poisoning. Inference time attack = adversarial example.','هجوم وقت التدريب = تسميم. هجوم وقت الاستدلال = مثال عدائي.']},
+ {t:['Privacy-preserving techniques','تقنيات حفظ الخصوصية'],p:[
+  ['Differential privacy: add calibrated noise so no single person changes the result much (epsilon controls the trade-off).','الخصوصية التفاضلية: إضافة ضوضاء معايرة بحيث لا يغيّر فرد واحد النتيجة كثيرًا (epsilon تضبط المفاضلة).'],
+  ['Federated learning: train where the data lives and share only model updates, not raw data.','التعلم الاتحادي: التدريب حيث توجد البيانات ومشاركة تحديثات النموذج فقط لا البيانات الخام.'],
+  ['Homomorphic encryption: compute on encrypted data. Also: anonymization, pseudonymization, data minimization.','التشفير المتماثل: حسابات على بيانات مشفرة. وأيضًا: إخفاء الهوية والأسماء المستعارة وتقليل البيانات.']],
+  x:['Several hospitals, cannot share records: federated learning.','عدة مستشفيات لا يمكنها مشاركة السجلات: تعلم اتحادي.']},
+ {t:['Governance, standards & regulation','الحوكمة والمعايير واللوائح'],p:[
+  ['NIST AI RMF has four functions: Govern, Map, Measure, Manage. ISO/IEC 42001 is a certifiable AI management system standard.','إطار NIST لإدارة مخاطر الذكاء الاصطناعي له أربع وظائف: Govern وMap وMeasure وManage. ISO/IEC 42001 معيار نظام إدارة ذكاء اصطناعي قابل للاعتماد.'],
+  ['GDPR: consent, minimization, erasure, transparency. EU AI Act: risk tiers (unacceptable, high, limited, minimal).','GDPR: موافقة وتقليل بيانات ومحو وشفافية. قانون الذكاء الاصطناعي الأوروبي: مستويات مخاطر (غير مقبول وعالٍ ومحدود ودنيا).'],
+  ['Saudi context: SDAIA AI Ethics Principles (fairness, privacy and security, humanity, social and environmental benefit, reliability and safety, transparency and explainability, accountability) and the Personal Data Protection Law (PDPL). Verify details on official SDAIA pages.','السياق السعودي: مبادئ أخلاقيات الذكاء الاصطناعي من سدايا (العدالة والخصوصية والأمن والإنسانية والمنافع الاجتماعية والبيئية والموثوقية والسلامة والشفافية وقابلية التفسير والمساءلة) ونظام حماية البيانات الشخصية (PDPL). تحققي من التفاصيل في صفحات سدايا الرسمية.'],
+  ['AI Ethics Principles define four lifecycle phases in this order: Plan and Design, Prepare Input Data, Build and Validate, Deploy and Monitor. The developer builds systems using data and algorithms; the owner applies or uses systems to achieve goals.','مبادئ أخلاقيات الذكاء الاصطناعي تحدد أربع مراحل لدورة حياة النظام بهذا الترتيب: Plan and Design ثم Prepare Input Data ثم Build and Validate ثم Deploy and Monitor. المطوّر يبني الأنظمة باستخدام البيانات والخوارزميات، والمالك يطبّق الأنظمة أو يستخدمها لتحقيق أهدافه.'],
+  ['Data governance: ownership, lineage, quality rules, access control. AI risk management: identify, assess, treat, monitor.','حوكمة البيانات: ملكية وتتبع المصدر وقواعد جودة وتحكم بالوصول. إدارة مخاطر الذكاء الاصطناعي: تحديد وتقييم ومعالجة ومراقبة.']],
+  x:['Governance questions reward the answer that is documented, accountable and proportional to risk. Option names are close, so learn the official names word for word (see the exam strategy tab).','أسئلة الحوكمة تكافئ الإجابة الموثقة والتي فيها مساءلة وتتناسب مع مستوى الخطر. الخيارات متقاربة فاحفظي الأسماء الرسمية بالنص (انظري تبويب الاستراتيجية).']}
+]},
+{id:'d7',n:'D7',w:6.7,en:'Business, Professional Practice & Collaboration',ar:'الأعمال والممارسة المهنية والتعاون',L:[
+ {t:['Problem framing, ROI & KPIs','تأطير المشكلة والعائد والمؤشرات'],p:[
+  ['Start from the business problem, not the model. Ask whether AI is needed at all; try a simple rule or baseline first.','ابدئي من مشكلة العمل وليس النموذج. اسألي هل نحتاج الذكاء الاصطناعي أصلًا؛ جرّبي قاعدة بسيطة أو خط أساس أولًا.'],
+  ['Separate model metrics (F1, RMSE) from business KPIs (cost saved, churn reduced). A model is only successful if the business KPI moves.','فرّقي بين مقاييس النموذج (F1 وRMSE) ومؤشرات الأعمال (تكلفة موفرة وتسرب أقل). النموذج ناجح فقط إذا تحرك مؤشر الأعمال.'],
+  ['ROI = (benefit − cost) / cost. Count full cost: data, people, infrastructure, maintenance, monitoring.','ROI = (المنفعة − التكلفة) / التكلفة. احسبي كامل التكلفة: بيانات وأفراد وبنية وصيانة ومراقبة.']],
+  x:['When the scenario shows a business gap, pick the answer that aligns the work with the KPI.','عندما يُظهر السيناريو فجوة في الأعمال، اختاري ما يربط العمل بمؤشر الأداء.']},
+ {t:['Methodologies and stakeholders','المنهجيات وأصحاب المصلحة'],p:[
+  ['Agile/Scrum: short sprints and iteration. Kanban: visual flow with work-in-progress limits. CRISP-DM: business understanding, data understanding, data preparation, modeling, evaluation, deployment.','أجايل/سكرام: سبرنتات قصيرة وتكرار. كانبان: تدفق مرئي مع حدود للعمل الجاري. CRISP-DM: فهم الأعمال ثم فهم البيانات ثم تجهيزها ثم النمذجة ثم التقييم ثم النشر.'],
+  ['Manage expectations: explain uncertainty, trade-offs and limits. Never promise 100% accuracy.','أدِرِي التوقعات: اشرحي عدم اليقين والمفاضلات والحدود. لا تعدي بدقة 100%.']],
+  x:['CRISP-DM always starts with business understanding.','CRISP-DM يبدأ دائمًا بفهم الأعمال.']},
+ {t:['Communication, ethics & collaboration','التواصل والأخلاقيات والتعاون'],p:[
+  ['Technical communication: speak in the audience’s language, lead with the decision and the impact, use visuals (data storytelling).','التواصل التقني: خاطبي الجمهور بلغته وابدئي بالقرار والأثر واستخدمي المرئيات (سرد القصص بالبيانات).'],
+  ['Professional ethics: honesty about limitations, disclose discovered bias or risk, protect privacy, do not take shortcuts that harm people.','الأخلاقيات المهنية: صدق بشأن القيود، والإفصاح عن أي تحيز أو خطر مكتشف، وحماية الخصوصية، وعدم اختصار الطريق بما يضر الناس.'],
+  ['Cross-functional work: data engineers, product, legal, security, domain experts. Share knowledge with docs, reviews and blameless post-mortems.','العمل متعدد التخصصات: مهندسو بيانات ومنتج وقانون وأمن وخبراء مجال. شاركي المعرفة بالتوثيق والمراجعات وتحليل الحوادث بلا لوم.']],
+  x:['Ethics scenarios: the right answer discloses and mitigates, it never hides to meet a deadline.','سيناريوهات الأخلاقيات: الإجابة الصحيحة تُفصح وتعالج ولا تُخفي من أجل موعد.']}
+]}
+];
+
+var PRIMER=[
+ ['AI, ML, DL, GenAI: what is the difference?','الذكاء الاصطناعي وتعلم الآلة والتعلم العميق والتوليدي: ما الفرق؟',
+  ['AI is the big field: machines doing tasks that need intelligence. Machine Learning (ML) is a way to do AI by learning patterns from data instead of writing rules. Deep Learning (DL) is ML with many-layer neural networks. Generative AI creates new content (text, images, code).','الذكاء الاصطناعي هو المجال الكبير: آلات تؤدي مهام تحتاج ذكاءً. تعلم الآلة طريقة لتحقيقه بتعلم الأنماط من البيانات بدل كتابة القواعد. التعلم العميق تعلم آلة بشبكات عصبية متعددة الطبقات. الذكاء التوليدي ينتج محتوى جديدًا (نص وصور وكود).']],
+ ['Data, features, labels, model','البيانات والخصائص والهدف والنموذج',
+  ['Imagine predicting house prices. Features are the inputs (area, rooms, city). The label is the answer (price). The model is the formula it learns. Training = learning from examples. Inference = using the trained model on new houses.','تخيّلي التنبؤ بسعر بيت. الخصائص (features) هي المدخلات (المساحة والغرف والمدينة). الهدف (label) هو الجواب (السعر). النموذج هو الصيغة التي يتعلمها. التدريب = التعلم من أمثلة. الاستدلال = استخدام النموذج المدرّب على بيوت جديدة.']],
+ ['Three ways machines learn','ثلاث طرق للتعلم',
+  ['Supervised: examples with answers (spam or not). Unsupervised: no answers, find structure (group similar customers). Reinforcement: try actions and learn from rewards (game-playing agent).','إشرافي: أمثلة معها إجابات (بريد مزعج أم لا). غير إشرافي: بلا إجابات، نكتشف البنية (تجميع عملاء متشابهين). معزز: تجربة إجراءات والتعلم من المكافآت (وكيل يلعب).']],
+ ['Why we split data three ways','لماذا نقسم البيانات إلى ثلاثة',
+  ['Training set = practice questions. Validation set = a mock exam to choose settings. Test set = the real exam, used once. If a model memorizes the practice questions it overfits: great on training, bad on new data.','بيانات التدريب = أسئلة التمرين. التحقق = اختبار تجريبي لاختيار الإعدادات. الاختبار = الاختبار الحقيقي ويُستخدم مرة واحدة. إذا حفظ النموذج أسئلة التمرين فهذا فرط تكيّف: ممتاز على التدريب وسيئ على الجديد.']],
+ ['The life of an AI system','حياة نظام الذكاء الاصطناعي',
+  ['Problem → data → train → evaluate → deploy → monitor → retrain. Most exam questions are about one step of this loop and what goes wrong there. Deployment and operations (D4) carry the highest weight.','المشكلة ثم البيانات ثم التدريب ثم التقييم ثم النشر ثم المراقبة ثم إعادة التدريب. أغلب أسئلة الاختبار عن خطوة من هذه الحلقة وما الذي يفشل فيها. النشر والتشغيل (D4) أعلى وزنًا.']],
+ ['The exam is scenario-based, so learn decisions, not definitions','الاختبار سيناريوهات، فتعلّمي القرارات لا التعاريف',
+  ['For each concept ask four things: What is it? When do I use it? Why? What is the alternative? Then practise choosing between similar options under a constraint (cost, latency, privacy, regulation, little data).','لكل مفهوم اسألي أربعة أسئلة: ما هو؟ متى أستخدمه؟ لماذا؟ ما البديل؟ ثم تدربي على الاختيار بين خيارات متشابهة تحت قيد (تكلفة أو زمن أو خصوصية أو لوائح أو بيانات قليلة).']]
+];
+
+var QCORE=[
+/* D1 */
+['d1','A fraud dataset has 0.5% fraud. A model reports 99.5% accuracy but flags no fraud at all. Which evaluation approach is most appropriate?',['Keep using accuracy','Recall and precision-recall AUC','R-squared','Mean squared error'],1,'الدقة مضللة مع عدم التوازن (النموذج يتنبأ “لا احتيال” دائمًا). استخدمي recall وPR-AUC وF1.','Accuracy is misleading on imbalanced data. Use recall, precision and PR-AUC.'],
+['d1','A team fits a standard scaler on the entire dataset before splitting into train and test. What is the main problem?',['Class imbalance','Concept drift','Data leakage','Underfitting'],2,'محجِّم تعلّم من بيانات الاختبار، فتسربت معلومات الاختبار إلى التدريب. الصحيح: التدريب على التدريب فقط.','Test statistics leaked into training. Fit preprocessing on the training set only.'],
+['d1','Missing a positive case is very costly (e.g. a serious disease), and false alarms are acceptable. Which metric should be prioritized?',['Precision','Recall','Accuracy','Specificity'],1,'Recall = نسبة الإيجابيين الحقيقيين الذين اكتشفناهم، ويُفضَّل عندما يكون FN مكلفًا.','Recall measures how many real positives are found; prioritize it when false negatives are costly.'],
+['d1','Training accuracy is 99% and validation accuracy is 72%. What is the best first action?',['Apply regularization or collect more data','Increase model complexity','Remove the validation set','Train for many more epochs'],0,'فجوة كبيرة = فرط تكيّف (تباين عالٍ). الحل: تنظيم وبيانات أكثر ونموذج أبسط.','A big train-validation gap signals overfitting; regularize, add data or simplify.'],
+['d1','You forecast weekly sales for next quarter. Which data split is appropriate?',['Random shuffled k-fold','Train on earlier periods, validate on later periods','Test on the training data','Stratified split by random sampling'],1,'في السلاسل الزمنية قسّمي حسب الزمن لتجنب استخدام المستقبل في التدريب.','For time series, split chronologically to avoid using the future to predict the past.'],
+['d1','You have only 500 labeled rows and need a reliable estimate of model performance. What should you use?',['A single 50/50 split','Training accuracy','k-fold cross-validation','Accuracy on the test set after tuning on it'],2,'k-fold يستخدم كل البيانات للتدريب والتحقق بالتناوب فيعطي تقديرًا أكثر استقرارًا.','k-fold CV uses all data for both training and validation in turn, giving a stable estimate.'],
+['d1','A salary column is heavily right-skewed and has missing values. Which imputation is usually most sensible?',['Fill with the mean','Fill with the median','Fill with zero','Delete the column'],1,'الوسيط أقل تأثرًا بالقيم المتطرفة من المتوسط في البيانات المنحرفة.','The median is robust to skew and outliers, unlike the mean.'],
+/* D2 */
+['d2','A support chatbot must answer from internal policy documents that change every week. What is the best approach?',['Fine-tune the LLM every week','Retrieval-Augmented Generation (RAG)','Train a new model from scratch','Raise the temperature'],1,'RAG يضيف أحدث المستندات وقت الاستعلام دون إعادة تدريب، ويقلل الهلوسة.','RAG injects current documents at query time with no retraining and reduces hallucination.'],
+['d2','Why do Transformers need positional encoding?',['To reduce model size','Self-attention alone has no notion of token order','To speed up tokenization','To prevent overfitting'],1,'الانتباه الذاتي يعالج الرموز كمجموعة، فنضيف معلومات الموضع.','Self-attention treats tokens as a set; position information must be added.'],
+['d2','Early layers of a very deep sigmoid network barely update during training. What is the likely cause?',['Exploding gradients','Vanishing gradients','Data leakage','Class imbalance'],1,'sigmoid يضغط التدرجات فتتلاشى عبر الطبقات. الحل: ReLU وresidual وbatch norm.','Sigmoid saturates and gradients vanish. Use ReLU, residual connections, batch norm.'],
+['d2','Which output activation fits a multi-class classification problem with 10 mutually exclusive classes?',['ReLU','Sigmoid','Softmax','Linear'],2,'softmax تعطي توزيع احتمالات يجمع إلى 1 على الفئات.','Softmax outputs a probability distribution over mutually exclusive classes.'],
+['d2','A team must adapt a very large LLM to a new style but has limited GPU memory. Which technique fits best?',['Training from scratch','LoRA or QLoRA (PEFT)','Increasing the context window','Using a higher learning rate'],1,'PEFT يدرّب محوّلات صغيرة فقط فيوفر الذاكرة والتكلفة.','PEFT trains only small adapters, saving memory and cost.'],
+['d2','Which metric is most commonly used to evaluate text summarization against reference summaries?',['BLEU','ROUGE','Silhouette score','AUC'],1,'ROUGE يعتمد على التداخل (recall) وهو الشائع للتلخيص، وBLEU للترجمة.','ROUGE (recall-oriented overlap) is standard for summarization; BLEU is for translation.'],
+/* D3 */
+['d3','Internal microservices need low latency, strongly typed contracts and bidirectional streaming. Which protocol fits best?',['REST over JSON','gRPC','SOAP','FTP'],1,'gRPC يستخدم Protobuf وHTTP/2 ويدعم البث وهو مثالي للخدمات الداخلية.','gRPC uses Protobuf over HTTP/2 with streaming; ideal for internal services.'],
+['d3','A mobile app needs only a few fields from several resources and wants to avoid over-fetching. Which API style helps most?',['GraphQL','gRPC','Webhooks','Polling'],0,'GraphQL يتيح للعميل تحديد الحقول المطلوبة في طلب واحد.','GraphQL lets the client request exactly the fields it needs in one call.'],
+['d3','A third-party app must access a user’s data without ever seeing the user’s password. What should be used?',['API key in the URL','OAuth 2.0','Basic authentication','Shared admin account'],1,'OAuth2 تفويض بالوصول عبر رموز دون مشاركة كلمة المرور.','OAuth 2.0 delegates access using tokens, with no password sharing.'],
+['d3','A pipeline must ingest very high-volume sensor events and allow consumers to replay past events. Which technology fits?',['RabbitMQ only','Apache Kafka','A cron job','Redis string keys'],1,'Kafka سجل أحداث موزع يدعم الإنتاجية العالية وإعادة القراءة.','Kafka is a durable distributed log with high throughput and replay.'],
+['d3','A model runs on a developer laptop but fails on the server because of different library versions. What is the best fix?',['Ask the server team to match the laptop manually','Package the app and dependencies in a Docker container','Rewrite the model','Disable logging'],1,'الحاوية تضمن نفس البيئة في كل مكان.','Containers guarantee the same environment everywhere.'],
+['d3','A payment provider must tell your system as soon as a payment completes, without your system repeatedly asking. Which mechanism?',['Polling','Webhook','Batch export','Manual refresh'],1,'Webhook: يدفع المزوّد الحدث إلى رابطك فور حدوثه.','A webhook pushes the event to your endpoint when it happens.'],
+/* D4 */
+['d4','You want to test a new model on live traffic with zero risk to users, comparing it to the current model. Which strategy?',['Canary deployment','Shadow deployment','Blue-green deployment','Big-bang release'],1,'Shadow: النموذج الجديد يرى الحركة الحقيقية لكن مخرجاته لا تصل للمستخدم.','Shadow mode runs the new model on real traffic while hiding its outputs.'],
+['d4','You want to expose a new model version to 5% of users first and expand if metrics stay healthy. Which strategy?',['Canary deployment','Shadow deployment','Cold start','Offline batch scoring'],0,'Canary: نسبة صغيرة من الحركة الحقيقية ثم توسع تدريجي.','Canary routes a small share of real traffic and ramps up gradually.'],
+['d4','After a market shift, the same input features now correspond to different outcomes, and accuracy keeps falling. What is this?',['Data leakage','Concept drift','Label encoding error','Underfitting'],1,'انجراف المفهوم: تغيّرت العلاقة بين المدخلات والهدف، فنحتاج إعادة تدريب.','Concept drift: the input-target relationship changed; retraining is needed.'],
+['d4','A release strategy must allow an instant switch back to the previous version using two identical environments. Which one?',['Blue-green deployment','Canary','Shadow','Rolling restart of one server'],0,'الأزرق-الأخضر: بيئتان متطابقتان وتبديل الحركة فورًا.','Blue-green keeps two identical environments and flips traffic instantly.'],
+['d4','Features are computed differently in the training pipeline and in the online service, hurting production accuracy. Which component helps most?',['A bigger GPU','A feature store','More epochs','A larger context window'],1,'مخزن الخصائص يوحّد تعريف الخصائص للتدريب والتقديم.','A feature store gives one consistent definition for training and serving.'],
+['d4','An LLM app receives many repeated or near-identical questions and costs are rising. What is a sensible first optimization?',['Increase max tokens','Add response or semantic caching','Switch to a larger model','Turn off logging'],1,'التخزين المؤقت للإجابات يقلل الاستدعاءات والتكلفة والزمن.','Caching avoids repeat model calls, cutting cost and latency.'],
+['d4','The team states a target of 99.9% monthly availability for an internal service with no financial penalty. What is this target called?',['SLA','SLO','SLI','RTO'],1,'SLO هدف داخلي، SLI هو المقياس نفسه، SLA عقد بعواقب.','An SLO is an internal target; SLI is the measurement; SLA is a contract.'],
+/* D5 */
+['d5','Unpredictable, spiky traffic for a small stateless inference function; the team wants to pay only when requests arrive. Which option?',['Reserved GPU cluster','Serverless','On-premises server','Vertical scaling of one VM'],1,'Serverless يتوسع حتى الصفر ويُدفع لكل استدعاء.','Serverless scales to zero and bills per invocation.'],
+['d5','Regulation requires that sensitive citizen data remain inside the Kingdom under strict control. Which choice best respects this?',['Public cloud in any region','On-premises or in-country private cloud','Random vendor SaaS','Email the data to the vendor'],1,'قيد إقامة البيانات يحدد الاستضافة المحلية أو داخل المملكة.','Data residency constraints point to local or in-country hosting.'],
+['d5','A model is too large to fit into the memory of a single GPU. What should be used?',['Data parallelism only','Model parallelism','A smaller batch size on the same GPU only','Caching'],1,'عندما لا يتسع النموذج نقسّمه بين أجهزة (model/pipeline parallelism).','When the model does not fit, split the model across devices.'],
+['d5','A team wants cheap storage for raw, semi-structured data now and will decide how to use it later. Which fits best?',['Data warehouse only','Data lake','In-memory cache','Spreadsheet'],1,'بحيرة البيانات تخزن الخام بتكلفة منخفضة وبنمط schema-on-read.','A data lake stores raw data cheaply with schema-on-read.'],
+['d5','What does RTO (Recovery Time Objective) specify?',['Acceptable data loss','Maximum acceptable downtime','Model accuracy target','Network throughput'],1,'RTO عن الوقت، وRPO عن كمية البيانات المسموح فقدها.','RTO is about downtime; RPO is about data loss.'],
+['d5','A stateless API is saturating its single large server. Which scaling approach is generally best for resilience?',['Buy an even larger single server','Horizontal scaling behind a load balancer','Disable autoscaling','Move logs to the same server'],1,'الأفقي يعطي مرونة وتحمل أعطال، والخدمة بلا حالة فمناسبة.','Horizontal scaling adds capacity and fault tolerance; stateless services suit it.'],
+/* D6 */
+['d6','A loan model approves equally qualified applicants from one group less often than another. Which kind of check is most relevant?',['Fairness metrics such as demographic parity or equal opportunity','Learning rate search','Image augmentation','Latency testing'],0,'مقاييس العدالة تقارن النتائج بين المجموعات.','Fairness metrics compare outcomes across groups.'],
+['d6','An attacker adds imperceptible noise to an image so a deployed classifier misclassifies it. What is this?',['Data poisoning','Adversarial example','Model drift','Overfitting'],1,'مثال عدائي هجوم وقت الاستدلال، أما التسميم فوقت التدريب.','Adversarial example = inference-time attack; poisoning = training-time attack.'],
+['d6','Several hospitals want to train a joint model without moving patient records out of each hospital. What fits?',['Federated learning','Data poisoning','Model extraction','Larger batch size'],0,'التعلم الاتحادي يدرّب محليًا ويشارك تحديثات النموذج فقط.','Federated learning trains locally and shares only model updates.'],
+['d6','An LLM agent reads a web page containing hidden text that tells it to email confidential data. What is this attack?',['Indirect prompt injection','Overfitting','Quantization error','Canary release'],0,'تعليمات مخفية في محتوى مسترجع = حقن أوامر غير مباشر. عالجيه بصلاحيات أقل وموافقة بشرية.','Hidden instructions in retrieved content = indirect prompt injection; use least privilege and human approval.'],
+['d6','A regulator asks why the model rejected one specific applicant. Which tool is most suitable?',['SHAP or LIME','Grid search','Dropout','Blue-green switch'],0,'SHAP/LIME تفسّر تنبؤًا فرديًا.','SHAP and LIME explain individual predictions.'],
+['d6','Which document describes a model’s intended use, limitations, evaluation results and risks?',['Model card','Dockerfile','Load balancer config','Confusion matrix'],0,'بطاقة النموذج (Model Card) هي وثيقة الشفافية.','A model card is the transparency document for a model.'],
+['d6','Which are the four functions of the NIST AI Risk Management Framework?',['Govern, Map, Measure, Manage','Plan, Build, Run, Retire','Collect, Clean, Train, Serve','Detect, Deny, Delete, Defend'],0,'Govern وMap وMeasure وManage.','Govern, Map, Measure, Manage.'],
+/* D7 */
+['d7','A manager asks you to “use AI” for a problem that a simple rule already solves well. What should you do first?',['Build a deep neural network anyway','Clarify the business problem and compare with a simple baseline','Buy more GPUs','Skip requirements gathering'],1,'ابدئي بالمشكلة وخط الأساس البسيط؛ الذكاء الاصطناعي ليس الهدف.','Start from the problem and a simple baseline; AI is not the goal.'],
+['d7','The model reaches 95% accuracy but the business KPI has not improved. What is most likely missing?',['A bigger model','Alignment between the model objective and the business KPI','More epochs','A new font'],1,'مقياس النموذج لا يعني بالضرورة قيمة للأعمال.','A model metric does not guarantee business value.'],
+['d7','A stakeholder insists the model must be 100% accurate. What is the best response?',['Promise it','Explain uncertainty and trade-offs, and agree on realistic success criteria','Ignore the stakeholder','Hide error cases'],1,'أدارة التوقعات بالشفافية عن عدم اليقين.','Manage expectations with honest communication about uncertainty.'],
+['d7','Which phase starts the CRISP-DM process?',['Deployment','Business understanding','Modeling','Evaluation'],1,'تبدأ CRISP-DM بفهم الأعمال.','CRISP-DM begins with business understanding.'],
+['d7','After deployment you discover the model is biased against a group, and a deadline is near. What is the professional action?',['Stay silent until after the deadline','Disclose the issue, mitigate or pause, and involve stakeholders','Delete the logs','Blame the data team publicly'],1,'الأخلاقيات المهنية تتطلب الإفصاح والمعالجة.','Professional ethics requires disclosure and mitigation.']
+];
+
+var G=[
+['Feature','خاصية','A variable fed into the model.','متغير يدخل إلى النموذج.'],
+['Label / Target','الهدف','The value or class the model learns to predict.','القيمة أو الفئة التي يتعلم النموذج التنبؤ بها.'],
+['Training Set','بيانات التدريب','Data used to update model parameters.','بيانات تُستخدم لتحديث معاملات النموذج.'],
+['Validation Set','بيانات التحقق','Data used to choose settings and compare models.','بيانات لاختيار الإعدادات والمقارنة بين النماذج.'],
+['Test Set','بيانات الاختبار','Unseen data for the final evaluation.','بيانات غير مرئية للتقييم النهائي.'],
+['Data Leakage','تسريب البيانات','Outside information reaches training, making evaluation misleading.','معلومات من خارج التدريب تصل للتعلم فتضلل التقييم.'],
+['Overfitting','فرط التكيّف','Strong on training data, weak on new data.','قوي على التدريب وضعيف على البيانات الجديدة.'],
+['Underfitting','نقص التكيّف','Model misses the pattern even on training data.','النموذج لا يلتقط النمط حتى على التدريب.'],
+['Bias (model)','انحياز','Systematic error or tendency in model or data.','خطأ أو ميل منهجي في النموذج أو البيانات.'],
+['Variance','تباين','Sensitivity of the model to changes in the training sample.','حساسية النموذج لتغير عينة التدريب.'],
+['Regularization','تنظيم','Techniques that limit complexity to reduce overfitting (L1, L2, dropout).','تقنيات تحد من التعقيد لتقليل فرط التكيّف.'],
+['Loss','دالة الخسارة','Numeric measure of model error during training.','مقياس رقمي لخطأ النموذج أثناء التدريب.'],
+['Gradient','التدرج','Direction of change of the loss with respect to parameters.','اتجاه تغير الخسارة بالنسبة للمعاملات.'],
+['Learning Rate','معدل التعلم','Step size for weight updates.','حجم الخطوة عند تحديث الأوزان.'],
+['Epoch','حقبة','One full pass over the training data.','مرور كامل على بيانات التدريب.'],
+['Batch','دفعة','A subset of data processed in one training step.','مجموعة جزئية من البيانات في خطوة تدريب.'],
+['Precision','الضبط (Precision)','Of predicted positives, the fraction that are correct.','من المتوقع إيجابيًا، النسبة الصحيحة.'],
+['Recall','الاستدعاء (Recall)','Of real positives, the fraction the model found.','من الإيجابيين الحقيقيين، النسبة التي اكتُشفت.'],
+['F1','مقياس F1','Harmonic mean of precision and recall.','المتوسط التوافقي للضبط والاستدعاء.'],
+['Calibration','المعايرة','How well predicted probabilities match observed frequencies.','مدى تطابق الاحتمالات المتوقعة مع التكرارات الفعلية.'],
+['Embedding','التضمين','Dense numeric vector representing an item such as a word or document.','متجه رقمي كثيف يمثل عنصرًا مثل كلمة أو مستند.'],
+['Token','الرمز (Token)','A text unit the model processes after tokenization.','وحدة نصية يعالجها النموذج بعد التقطيع.'],
+['Context Window','نافذة السياق','How much text the model can process in one request.','كمية النص التي يعالجها النموذج في طلب واحد.'],
+['Attention','الانتباه','Mechanism that weighs how much each part of the context matters to the others.','آلية تزن أهمية أجزاء السياق بعضها لبعض.'],
+['Query / Key / Value','استعلام / مفتاح / قيمة','Representations inside attention: Q matches K, then aggregates V.','تمثيلات داخل الانتباه: Q يطابق K ثم يجمع V.'],
+['Transformer','الترانسفورمر','Architecture built on attention; trains in parallel; basis of LLMs.','معمارية مبنية على الانتباه تتدرب بالتوازي وأساس النماذج اللغوية.'],
+['Fine-tuning','الضبط الدقيق','Further training a pretrained model on specialized data.','تدريب إضافي لنموذج مدرّب مسبقًا على بيانات متخصصة.'],
+['Instruction Tuning','ضبط التعليمات','Fine-tuning so the model follows instructions.','ضبط دقيق ليتبع النموذج التعليمات.'],
+['PEFT','الضبط الفعّال للمعاملات','Adapt a model by updating only a small subset of parameters.','تكييف نموذج بتحديث جزء صغير من المعاملات.'],
+['LoRA','LoRA','A PEFT method adding trainable low-rank matrices.','طريقة PEFT تضيف مصفوفات منخفضة الرتبة قابلة للتدريب.'],
+['RAG','التوليد المعزز بالاسترجاع','Retrieve external info and add it to the prompt before generating.','استرجاع معلومات خارجية وإضافتها للأمر قبل التوليد.'],
+['Chunking','تقطيع المستندات','Splitting documents into pieces suitable for retrieval.','تقسيم المستندات إلى قطع مناسبة للاسترجاع.'],
+['Vector Database','قاعدة بيانات متجهية','Stores and indexes embeddings for similarity search.','تخزّن وتفهرس التضمينات للبحث بالتشابه.'],
+['Hallucination','الهلوسة','Confident but incorrect or unsupported output.','مخرج واثق لكنه خاطئ أو غير مدعوم.'],
+['Experiment Tracking','تتبع التجارب','Recording runs, parameters, metrics and artifacts.','تسجيل التجارب والمعاملات والمقاييس والمخرجات.'],
+['Model Registry','سجل النماذج','Repository of model versions, metadata and lifecycle stages.','مستودع لإصدارات النماذج وبياناتها ومراحل حياتها.'],
+['Feature Store','مخزن الخصائص','Shared, consistent feature definitions for training and serving.','تعريفات خصائص موحّدة للتدريب والتقديم.'],
+['Data Drift','انجراف البيانات','Input data distribution changes over time.','تغير توزيع بيانات المدخلات مع الزمن.'],
+['Concept Drift','انجراف المفهوم','Relationship between inputs and target changes over time.','تغير العلاقة بين المدخلات والهدف مع الزمن.'],
+['SLI','مؤشر مستوى الخدمة','A measurable indicator of service quality.','مؤشر قابل للقياس لجودة الخدمة.'],
+['SLO','هدف مستوى الخدمة','A target value for an SLI over a period.','قيمة مستهدفة للمؤشر خلال فترة.'],
+['SLA','اتفاقية مستوى الخدمة','Service agreement with formal or commercial commitments.','اتفاقية خدمة بالتزامات رسمية أو تجارية.'],
+['Canary Deployment','النشر التدريجي (Canary)','Release to a small traffic share, then scale up.','إطلاق لنسبة صغيرة من الحركة ثم التوسع.'],
+['Shadow Deployment','النشر الظلّي','Run the new version on live traffic without exposing outputs.','تشغيل الإصدار الجديد على حركة حية دون إظهار مخرجاته.'],
+['Blue-Green Deployment','النشر الأزرق-الأخضر','Two identical environments; switch traffic instantly.','بيئتان متطابقتان وتبديل الحركة فورًا.'],
+['Quantization','التكميم','Lower numeric precision to save memory and speed up inference.','خفض الدقة الرقمية لتوفير الذاكرة وتسريع الاستدلال.'],
+['Distillation','التقطير','Train a small student to mimic a large teacher.','تدريب طالب صغير ليقلّد معلمًا كبيرًا.'],
+['Prompt Injection','حقن الأوامر','Inputs that alter an LLM application’s behavior.','مدخلات تغيّر سلوك تطبيق نموذج لغوي.'],
+['Guardrail','الضابط (Guardrail)','Controls that reduce unwanted or unsafe behavior.','ضوابط تقلل السلوك غير المرغوب أو غير الآمن.'],
+['Model Card','بطاقة النموذج','Document of a model’s use, limits, risks and evaluation.','وثيقة تصف استخدام النموذج وحدوده ومخاطره وتقييمه.'],
+['Data Lineage','تتبع مصدر البيانات','Tracking where data comes from and how it changes.','تتبع أصل البيانات وكيف تتحول وتنتقل.'],
+['AI Risk Management','إدارة مخاطر الذكاء الاصطناعي','Identify, assess, treat and monitor AI risks.','تحديد مخاطر الذكاء الاصطناعي وتقييمها ومعالجتها ومراقبتها.'],
+['RPO / RTO','RPO / RTO','RPO: acceptable data loss. RTO: acceptable downtime.','RPO: فقد البيانات المسموح. RTO: مدة التوقف المسموحة.'],
+['ETL vs ELT','ETL مقابل ELT','ETL transforms before loading; ELT loads raw then transforms.','ETL يحوّل قبل التحميل؛ ELT يحمّل الخام ثم يحوّل.']
+];
+
+var GOVSTART=G.length;
+G.push(
+['AI Ethics Principles (7)','المبادئ الأخلاقية السبعة (سدايا)','Fairness · Privacy and Security · Humanity · Social and Environmental Benefits · Reliability and Safety · Transparency and Explainability · Accountability and Responsibility','العدالة · الخصوصية والأمن · الإنسانية · المنافع الاجتماعية والبيئية · الموثوقية والسلامة · الشفافية وقابلية التفسير · المساءلة والمسؤولية'],
+['AI lifecycle phases (4)','مراحل دورة حياة النظام (4)','Plan and Design → Prepare Input Data → Build and Validate → Deploy and Monitor','Plan and Design ثم Prepare Input Data ثم Build and Validate ثم Deploy and Monitor'],
+['AI system developer vs owner','المطوّر مقابل المالك','Developer builds systems using data and algorithms. Owner applies or uses systems to achieve goals.','المطوّر يبني الأنظمة باستخدام البيانات والخوارزميات. المالك يطبّق الأنظمة أو يستخدمها لتحقيق أهدافه.'],
+['National AI Risk Management Framework','الإطار الوطني لإدارة مخاطر الذكاء الاصطناعي','Advisory framework supporting identification, assessment, treatment and ongoing monitoring of AI risks.','إطار استرشادي يدعم تحديد مخاطر الذكاء الاصطناعي وتقييمها ومعالجتها ومراقبتها باستمرار.'],
+['NIST AI RMF (4 functions)','وظائف إطار NIST الأربع','Govern · Map · Measure · Manage','Govern (الحوكمة) · Map (رسم السياق) · Measure (القياس) · Manage (الإدارة)'],
+['EU AI Act risk tiers','مستويات الخطر في قانون الاتحاد الأوروبي','Unacceptable · High · Limited · Minimal','غير مقبول · عالٍ · محدود · أدنى'],
+['ISO/IEC 42001','ISO/IEC 42001','International, certifiable standard for an AI management system.','معيار دولي قابل للاعتماد لنظام إدارة الذكاء الاصطناعي.'],
+['PDPL','نظام حماية البيانات الشخصية','Saudi Personal Data Protection Law: rules for collecting, processing, retaining and sharing personal data.','النظام السعودي الذي ينظم جمع البيانات الشخصية ومعالجتها وحفظها ومشاركتها.'],
+['GDPR','اللائحة الأوروبية لحماية البيانات','EU regulation: consent, data minimization, right to erasure, transparency.','لائحة أوروبية: الموافقة وتقليل البيانات والحق في المحو والشفافية.'],
+['Datasheet for datasets','صحيفة بيانات المجموعة','Documents how a dataset was collected, its contents and limits.','توثّق كيف جُمعت البيانات ومحتواها وحدودها.'],
+['Audit Trail','سجل التدقيق','Record of who did what and when, for traceability of decisions and changes.','سجل بمن فعل ماذا ومتى لتتبع القرارات والتغييرات.'],
+['Human-in-the-loop','الإنسان في الحلقة','A person reviews or approves high-stakes decisions before action.','مراجعة بشرية أو موافقة قبل تنفيذ القرارات عالية الخطورة.'],
+['Demographic parity / Equalized odds','التكافؤ الديموغرافي / تكافؤ الفرص','Demographic parity: equal positive rate across groups. Equalized odds: equal TPR and FPR across groups.','الأول: نسبة إيجابية متساوية بين المجموعات. الثاني: TPR وFPR متساويان بين المجموعات.'],
+['Differential Privacy','الخصوصية التفاضلية','Calibrated noise so no single person noticeably changes the result.','ضوضاء معايرة بحيث لا يغيّر فرد واحد النتيجة بشكل ملحوظ.'],
+['Federated Learning','التعلم الاتحادي','Train where the data lives; share only model updates.','تدريب حيث توجد البيانات ومشاركة تحديثات النموذج فقط.'],
+['Homomorphic Encryption','التشفير المتماثل','Compute directly on encrypted data.','إجراء الحسابات مباشرة على بيانات مشفرة.'],
+['Data Poisoning','تسميم البيانات','Training-time attack that corrupts training data.','هجوم وقت التدريب يفسد بيانات التدريب.'],
+['Adversarial Example','مثال عدائي','Inference-time input with tiny crafted changes that fools the model.','مدخل وقت الاستدلال بتغييرات صغيرة مصممة تخدع النموذج.'],
+['Indirect Prompt Injection','حقن الأوامر غير المباشر','Hidden instructions in retrieved documents or web pages hijack an LLM. Mitigate: least privilege, guardrails, human approval.','تعليمات مخفية في مستندات أو صفحات مسترجعة تختطف النموذج. العلاج: أقل صلاحيات وضوابط وموافقة بشرية.']
+);
+
+var PLAN=[
+ ['2026-11-23','الإثنين','23','نوفمبر',[['Zero-to-hero primer (6 cards) + read the exam strategy tab','البدء من الصفر (6 بطاقات) وقراءة تبويب استراتيجية الاختبار'],['Skim all 7 domain titles and weights','مرور سريع على المحاور السبعة وأوزانها'],['Warm-up quiz “تمهيدي سريع” (20 questions)','اختبار تمهيدي سريع (20 سؤالًا) لتثبيت المفاتيح']]],
+ ['2026-11-24','الثلاثاء','24','نوفمبر',[['D1 lessons 1 and 2: data quality, splitting, leakage, imbalance','D1 الدرسان 1 و2: جودة البيانات والتقسيم والتسريب وعدم التوازن'],['Flashcards: first 20 terms','بطاقات: أول 20 مصطلحًا']]],
+ ['2026-11-25','الأربعاء','25','نوفمبر',[['D1 lessons 3, 4, 5: algorithms, bias-variance, metrics','D1 الدروس 3 و4 و5: الخوارزميات والانحياز والتباين والمقاييس'],['Quiz D1 and review wrong answers','اختبار D1 ومراجعة الأخطاء']]],
+ ['2026-11-26','الخميس','26','نوفمبر',[['D2 lessons 1, 2, 3: neural nets, training problems, CNN/RNN','D2 الدروس 1 و2 و3: الشبكات العصبية ومشاكل التدريب وCNN/RNN']]],
+ ['2026-11-27','الجمعة','27','نوفمبر',[['D2 lessons 4, 5, 6: Transformers, prompt/RAG/fine-tune, generative models','D2 الدروس 4 و5 و6: الترانسفورمر والأوامر وRAG والضبط الدقيق والتوليد'],['Quiz D2 and review wrong answers','اختبار D2 ومراجعة الأخطاء']]],
+ ['2026-11-28','السبت','28','نوفمبر',[['D3 all 4 lessons: code, APIs, messaging, containers','D3 الدروس الأربعة: الكود والواجهات والرسائل والحاويات'],['Quiz D3','اختبار D3']]],
+ ['2026-11-29','الأحد','29','نوفمبر',[['D4 lessons 1, 2, 3: lifecycle, CI/CD/CT, deployment strategies','D4 الدروس 1 و2 و3: دورة الحياة وCI/CD/CT واستراتيجيات النشر']]],
+ ['2026-11-30','الإثنين','30','نوفمبر',[['D4 lessons 4 and 5: monitoring, drift, LLMOps','D4 الدرسان 4 و5: المراقبة والانجراف وLLMOps'],['Quiz D4 (highest weight) + flashcards 20 to 40','اختبار D4 (الأعلى وزنًا) وبطاقات من 20 إلى 40']]],
+ ['2026-12-01','الثلاثاء','1','ديسمبر',[['D5 all 5 lessons + quiz D5','D5 الدروس الخمسة + اختبار D5'],['D7 all 3 lessons + quiz D7 (small weight, easy marks)','D7 الدروس الثلاثة + اختبار D7 (وزن صغير ونقاط سهلة)']]],
+ ['2026-12-02','الأربعاء','2','ديسمبر',[['D6 all 5 lessons: fairness, XAI, security, privacy, governance','D6 الدروس الخمسة: العدالة والتفسير والأمن والخصوصية والحوكمة'],['Quiz D6','اختبار D6']]],
+ ['2026-12-03','الخميس','3','ديسمبر',[['Weighted mock (30) then bank-140 (20 questions), review every mistake','محاكاة موزونة (30 سؤالًا) ثم بنك الـ140 (20 سؤالًا) ومراجعة كل خطأ'],['Bank-60 (20 scenario questions with tables)','بنك الـ60 (20 سؤال سيناريو بجداول)'],['Retake “my mistakes” until clean','أعيدي “أخطائي” حتى تصفى']]],
+ ['2026-12-04','الجمعة','4','ديسمبر',[['Light revision: strategy tab, decision table, flashcards you missed','مراجعة خفيفة: الاستراتيجية وجدول القرارات والبطاقات التي أخطأتِ فيها'],['Sleep early, check ID and venue','نامي مبكرًا وتأكدي من الهوية والموقع']]],
+ ['2026-12-05','السبت','5','ديسمبر',[['Exam day. Read the last line of each scenario first.','يوم الاختبار. اقرئي السطر الأخير من كل سيناريو أولًا.']],true]
+];
+
+var DEC=[
+['Imbalanced classes, accuracy looks great','Recall, precision, PR-AUC, class weights','عدم توازن والدقة عالية: recall وprecision وPR-AUC وأوزان الفئات'],
+['Train score high, validation low','Overfitting: regularize, more data, simplify','تدريب عالٍ وتحقق منخفض: فرط تكيّف، نظّمي وزيدي البيانات وبسّطي'],
+['Both train and validation low','Underfitting: bigger model, better features','الاثنان منخفضان: نقص تكيّف، نموذج أقوى وخصائص أفضل'],
+['Scores too perfect','Look for data leakage','نتائج مثالية جدًا: ابحثي عن تسريب بيانات'],
+['Forecasting over time','Chronological split, never shuffle','تنبؤ زمني: تقسيم زمني بلا خلط'],
+['Answers must use fresh or private documents','RAG','إجابات من مستندات حديثة أو خاصة: RAG'],
+['Change style, tone or format of a model','Fine-tuning (PEFT/LoRA if GPU limited)','تغيير الأسلوب أو الصيغة: ضبط دقيق (LoRA إن كانت GPU محدودة)'],
+['Cheapest first step to improve an LLM','Better prompt, few-shot, chain-of-thought','أرخص خطوة لتحسين نموذج لغوي: أمر أفضل وأمثلة'],
+['Order of words matters in a Transformer','Positional encoding','ترتيب الكلمات: ترميز موضعي'],
+['Deep net, early layers do not learn','Vanishing gradients: ReLU, residual, batch norm','طبقات أولى لا تتعلم: تلاشي تدرجات'],
+['Zero user risk while testing a new model','Shadow deployment','لا خطر على المستخدم أثناء الاختبار: Shadow'],
+['Limit blast radius, ramp gradually','Canary deployment','تقليل أثر الخطأ وتوسع تدريجي: Canary'],
+['Instant rollback, two environments','Blue-green deployment','تراجع فوري وبيئتان: أزرق-أخضر'],
+['Inputs changed distribution','Data drift: monitor, maybe retrain','تغير توزيع المدخلات: انجراف بيانات'],
+['Same inputs, new meaning','Concept drift: retrain on new labels','نفس المدخلات بمعنى جديد: انجراف مفهوم'],
+['Training vs serving feature mismatch','Feature store','عدم تطابق الخصائص بين التدريب والتقديم: مخزن خصائص'],
+['Smaller, faster model without full retraining','Quantization (also pruning, distillation)','نموذج أصغر وأسرع: تكميم (وتقليم وتقطير)'],
+['Spiky, light, pay-per-use inference','Serverless','استدلال خفيف متقطع بالدفع لكل استخدام: Serverless'],
+['Model does not fit on one GPU','Model / pipeline parallelism','النموذج لا يتسع في GPU واحدة: توازي النموذج'],
+['Data must stay local by law','On-premises or in-country hosting','البيانات يجب أن تبقى محليًا بالنظام: استضافة محلية'],
+['Internal fast typed service calls','gRPC','نداءات داخلية سريعة ومحددة الأنواع: gRPC'],
+['Client chooses exact fields','GraphQL','العميل يختار الحقول: GraphQL'],
+['Delegated access without password','OAuth2','وصول مفوَّض دون كلمة مرور: OAuth2'],
+['Replayable high-volume event stream','Kafka','تدفق أحداث ضخم قابل للإعادة: Kafka'],
+['Explain one prediction','SHAP / LIME','تفسير تنبؤ واحد: SHAP / LIME'],
+['Hospitals cannot share data','Federated learning','مستشفيات لا تشارك البيانات: تعلم اتحادي'],
+['Hidden instructions in retrieved content','Indirect prompt injection: least privilege, guardrails','تعليمات مخفية في محتوى مسترجع: حقن غير مباشر'],
+['Model works, business KPI flat','Align metric with KPI; revisit framing','النموذج يعمل ومؤشر الأعمال ثابت: اربطي المقياس بالمؤشر']
+];
+
+/* ---------- diagrams and memory hooks ---------- */
+var svN=0;
+function sv(w,h){var inner=Array.prototype.slice.call(arguments,2).join('');svN++;var id='ah'+svN;return '<svg class="vs" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="diagram" style="direction:ltr"><defs><marker id="'+id+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="sv-ar"/></marker></defs>'+inner.replace(/#AH/g,'#'+id)+'</svg>'}
+function bx(x,y,w,h,t,c,t2){var s='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="8" class="'+(c||'sv-b')+'"/>';
+  if(t2)s+='<text x="'+(x+w/2)+'" y="'+(y+h/2-2)+'" class="sv-t" text-anchor="middle">'+t+'</text><text x="'+(x+w/2)+'" y="'+(y+h/2+13)+'" class="sv-m" text-anchor="middle">'+t2+'</text>';
+  else s+='<text x="'+(x+w/2)+'" y="'+(y+h/2+4)+'" class="sv-t" text-anchor="middle">'+t+'</text>';return s}
+function tx(x,y,t,c,a){return '<text x="'+x+'" y="'+y+'" class="'+(c||'sv-t')+'" text-anchor="'+(a||'middle')+'">'+t+'</text>'}
+function ln(x1,y1,x2,y2,d,c){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" class="'+(c||'sv-l')+'"'+(d?' stroke-dasharray="5 4"':'')+' marker-end="url(#AH)"/>'}
+var VIS={
+'d1-1':[sv(420,150,
+  bx(10,18,240,46,'Train 60%','sv-b','learn')+bx(250,18,80,46,'Val 20%','sv-g','tune')+bx(330,18,80,46,'Test 20%','sv-y','once')+
+  '<path d="M370 70 V108 H130 V70" class="sv-l sv-badl" fill="none" stroke-dasharray="5 4" marker-end="url(#AH)"/>'+tx(250,128,'✗ leakage: test information must never reach training','sv-bad')),
+  'تقسيم البيانات: التدريب للتعلم، والتحقق للضبط، والاختبار مرة واحدة في النهاية. أي معلومة تنتقل من الاختبار إلى التدريب هي تسريب.'],
+'d1-3':[sv(420,205,
+  '<line x1="40" y1="20" x2="40" y2="165" class="sv-ax"/><line x1="40" y1="165" x2="405" y2="165" class="sv-ax"/>'+
+  '<line x1="140" y1="25" x2="140" y2="165" class="sv-ax" stroke-dasharray="4 4"/><line x1="300" y1="25" x2="300" y2="165" class="sv-ax" stroke-dasharray="4 4"/>'+
+  '<path d="M45 50 C120 105 220 148 400 158" class="sv-c1" fill="none"/><path d="M45 55 C110 95 170 112 220 112 C290 112 350 85 400 42" class="sv-c2" fill="none"/>'+
+  tx(90,18,'Underfit','sv-m')+tx(220,18,'Good fit','sv-t')+tx(350,18,'Overfit','sv-m')+
+  tx(350,70,'validation','sv-bad')+tx(350,150,'training','sv-acc')+tx(222,190,'model complexity →','sv-m')+
+  '<text x="14" y="95" class="sv-m" text-anchor="middle" transform="rotate(-90 14 95)">error</text>'),
+  'الاثنان مرتفعان = نقص تكيّف. فجوة كبيرة بين التدريب والتحقق = فرط تكيّف. نبحث عن النقطة الوسطى.'],
+'d1-4':[sv(420,215,
+  tx(200,38,'Predicted +','sv-m')+tx(300,38,'Predicted −','sv-m')+tx(138,80,'Actual +','sv-m','end')+tx(138,130,'Actual −','sv-m','end')+
+  bx(150,48,100,48,'TP','sv-g')+bx(250,48,100,48,'FN','sv-r')+bx(150,98,100,48,'FP','sv-r')+bx(250,98,100,48,'TN','sv-g')+
+  '<rect x="148" y="46" width="104" height="102" rx="9" class="sv-hl"/><rect x="148" y="46" width="204" height="52" rx="9" class="sv-hl2"/>'+
+  tx(10,175,'Precision = TP / (TP + FP)  → first column','sv-t','start')+tx(10,196,'Recall = TP / (TP + FN)  → first row','sv-t','start')),
+  'Precision يسأل: من الذين صنّفتُهم إيجابيين كم أصبت؟ Recall يسأل: من الإيجابيين الحقيقيين كم أمسكت؟ إن كان تفويت الحالة مكلفًا فالمطلوب Recall.'],
+'d2-4':[sv(420,125,
+  bx(10,14,120,62,'1 Prompting','sv-b','cheapest, try first')+bx(150,14,120,62,'2 RAG','sv-g','fresh or private facts')+bx(290,14,120,62,'3 Fine-tune','sv-y','style, format, behavior')+
+  ln(130,45,150,45)+ln(270,45,290,45)+tx(210,106,'Facts → RAG     Behavior → Fine-tune (LoRA if GPU is limited)','sv-t')),
+  'ترتيب القرار: حسّني الأمر أولًا، ثم استخدمي RAG للمعرفة الحديثة أو الخاصة، ثم الضبط الدقيق لتغيير السلوك.'],
+'d2-5':[sv(420,175,
+  tx(10,12,'1 Index once','sv-m','start')+bx(10,20,85,40,'Documents')+bx(115,20,85,40,'Chunk')+bx(220,20,85,40,'Embed')+bx(325,20,85,40,'Vector DB','sv-g')+
+  ln(95,40,115,40)+ln(200,40,220,40)+ln(305,40,325,40)+
+  tx(10,104,'2 Answer each question','sv-m','start')+bx(10,112,85,40,'Question')+bx(115,112,85,40,'Search')+bx(220,112,85,40,'Prompt','sv-y')+bx(325,112,85,40,'LLM answer','sv-g')+
+  ln(95,132,115,132)+ln(200,132,220,132)+ln(305,132,325,132)+'<path d="M367 60 V86 H157 V112" class="sv-l" fill="none" stroke-dasharray="5 4" marker-end="url(#AH)"/>'),
+  'RAG: نفهرس المستندات مرة واحدة (تقطيع ثم تضمين ثم قاعدة متجهية). عند كل سؤال نبحث عن أقرب المقاطع ونضيفها للأمر ثم يجيب النموذج.'],
+'d4-0':[sv(420,190,
+  bx(10,15,85,40,'Data')+bx(115,15,85,40,'Train')+bx(220,15,85,40,'Evaluate')+bx(325,15,85,40,'Deploy','sv-g')+
+  ln(95,35,115,35)+ln(200,35,220,35)+ln(305,35,325,35)+
+  bx(325,120,85,40,'Monitor','sv-y')+ln(367,55,367,120)+
+  bx(115,120,85,40,'Retrain','sv-r')+ln(325,140,200,140)+ln(157,120,157,55)+tx(262,128,'drift / new data','sv-m')+tx(262,95,'a loop, never a line','sv-t')),
+  'دورة الحياة حلقة: بيانات، تدريب، تقييم، نشر، مراقبة، ثم إعادة تدريب عند الانجراف أو وصول بيانات جديدة.'],
+'d4-2':[sv(420,235,
+  tx(10,26,'Canary','sv-t','start')+tx(10,42,'small % first','sv-m','start')+bx(100,18,56,34,'Users')+bx(300,4,110,28,'v1 · 95%')+bx(300,38,110,28,'v2 · 5%','sv-g')+ln(156,31,300,18)+ln(156,40,300,52,0,'sv-l sv-gl'),
+  tx(10,106,'Blue-Green','sv-t','start')+tx(10,122,'switch all at once','sv-m','start')+bx(100,98,56,34,'Users')+bx(300,84,110,28,'Blue v1 · live')+bx(300,118,110,28,'Green v2 · idle','sv-g')+ln(156,111,300,98)+ln(156,120,300,132,1)+tx(228,150,'flip = instant rollback','sv-m'),
+  tx(10,186,'Shadow','sv-t','start')+tx(10,202,'no user risk','sv-m','start')+bx(100,178,56,34,'Users')+bx(300,164,110,28,'v1 · serves users')+bx(300,198,110,28,'v2 · copy only','sv-y')+ln(156,191,300,178)+ln(156,200,300,212,1)+tx(228,230,'mirror, output hidden','sv-m')),
+  'Canary: نسبة صغيرة من المستخدمين أولًا. Blue-Green: بيئتان وتبديل الحركة فورًا مع تراجع فوري. Shadow: نسخة من الحركة الحية بلا أي أثر على المستخدم.'],
+'d4-3':[sv(420,170,
+  tx(105,16,'Data drift','sv-t')+'<line x1="15" y1="110" x2="195" y2="110" class="sv-ax"/><path d="M20 110 Q55 15 90 110" class="sv-c1" fill="none"/><path d="M70 110 Q105 15 140 110" class="sv-c2" fill="none"/>'+
+  tx(48,128,'training','sv-acc')+tx(135,128,'live','sv-bad')+tx(105,152,'the inputs themselves shift','sv-m')+
+  tx(315,16,'Concept drift','sv-t')+'<circle cx="245" cy="55" r="6" class="sv-pa"/><circle cx="262" cy="80" r="6" class="sv-pa"/><circle cx="252" cy="102" r="6" class="sv-pa"/><circle cx="352" cy="62" r="6" class="sv-pb"/><circle cx="372" cy="88" r="6" class="sv-pb"/><circle cx="345" cy="104" r="6" class="sv-pb"/>'+
+  '<line x1="300" y1="30" x2="300" y2="118" class="sv-ax" stroke-dasharray="5 4"/><line x1="272" y1="30" x2="335" y2="118" class="sv-c2"/>'+tx(300,132,'old rule vs new rule','sv-m')+tx(315,152,'same inputs, new meaning','sv-m')),
+  'Data drift: تغيّر توزيع المدخلات نفسها. Concept drift: بقيت المدخلات كما هي لكن تغيّر معناها أي العلاقة بينها وبين النتيجة.'],
+'d5-2':[sv(420,180,
+  tx(95,14,'Vertical','sv-t')+bx(15,96,60,40,'small')+ln(80,116,112,116)+bx(115,50,90,86,'bigger VM','sv-y')+tx(105,160,'ceiling + single point of failure','sv-m')+
+  tx(315,14,'Horizontal','sv-t')+bx(265,24,100,30,'Load balancer','sv-g')+bx(225,96,56,40,'node')+bx(292,96,56,40,'node')+bx(359,96,56,40,'node')+
+  ln(300,54,253,96)+ln(315,54,320,96)+ln(330,54,387,96)+tx(320,160,'needs stateless services','sv-m')),
+  'رأسي: جهاز أقوى (له سقف ونقطة فشل واحدة). أفقي: أجهزة أكثر خلف موزّع أحمال، وهو الأنسب للخدمات التي بلا حالة.'],
+'d5-3':[sv(420,150,
+  tx(10,14,'ETL: transform before loading','sv-t','start')+bx(10,22,100,36,'Source')+bx(160,22,100,36,'Transform','sv-y')+bx(310,22,100,36,'Warehouse','sv-g')+ln(110,40,160,40)+ln(260,40,310,40)+
+  tx(10,92,'ELT: load raw first, transform inside','sv-t','start')+bx(10,100,100,36,'Source')+bx(160,100,100,36,'Raw lake','sv-g')+bx(310,100,100,36,'Transform','sv-y')+ln(110,118,160,118)+ln(260,118,310,118)),
+  'ETL يحوّل البيانات قبل تحميلها في المستودع. ELT يحمّل الخام أولًا ثم يحوّل داخل المنصة السحابية، وهو الأحدث.'],
+'d6-2':[sv(420,225,
+  tx(10,14,'TRAINING TIME','sv-m','start')+bx(10,22,170,28,'Data poisoning','sv-r')+ln(95,50,95,84,1)+
+  bx(10,86,70,38,'Data')+bx(100,86,80,38,'Training')+bx(200,86,70,38,'Model')+bx(290,86,120,38,'Inference','sv-g')+ln(80,105,100,105)+ln(180,105,200,105)+ln(270,105,290,105)+
+  tx(410,150,'INFERENCE TIME','sv-m','end')+ln(300,124,300,158,1)+
+  bx(210,162,200,16,'','sv-r')+tx(310,174,'Adversarial example','sv-t')+bx(210,182,200,16,'','sv-r')+tx(310,194,'Prompt injection (LLM)','sv-t')+bx(210,202,200,16,'','sv-r')+tx(310,214,'Model extraction / inversion','sv-t')),
+  'هجوم وقت التدريب = تسميم البيانات. هجمات وقت الاستدلال = أمثلة عدائية وحقن أوامر واستخلاص النموذج.']
+};
+var MN={
+'d1-0':['قاعدة الترتيب: قسّمي أولًا ثم درّبي المحجِّم على التدريب فقط. والوسيط للبيانات المنحرفة.','Split first, fit preprocessing on train only.'],
+'d1-1':['تدريب = مذاكرة، تحقق = اختبار تجريبي، اختبار = الاختبار الحقيقي مرة واحدة.','Practice, mock exam, real exam.'],
+'d1-2':['الغابة العشوائية = كثيرون يصوّتون معًا فيقل التباين. التعزيز = طالب يصلح أخطاء من قبله فيقل الانحياز.','Bagging votes in parallel; boosting corrects in sequence.'],
+'d1-3':['فجوة بين التدريب والتحقق = حفظ بدل فهم. الاثنان ضعيفان = لم يفهم بعد.','Big gap = overfit. Both bad = underfit.'],
+'d1-4':['Precision = نقاء الإنذارات. Recall = تغطية الحالات الحقيقية. إن فوّتُّ الخطر ← Recall.','Costly miss → recall; costly false alarm → precision.'],
+'d2-0':['المخرج يحدد التفعيل: فئتان sigmoid، فئات كثيرة softmax، رقم حر بلا تفعيل.','Output layer picks the activation.'],
+'d2-1':['تلاشي التدرج كلعبة الهاتف: الرسالة تضيع في الطريق. الحل اختصارات (ResNet) وReLU.','Deep + sigmoid → vanishing gradients.'],
+'d2-2':['CNN للصور (عين تمسح بمرشحات)، RNN/LSTM للتسلسل (ذاكرة)، والترانسفورمر حلّ محلهما غالبًا.','CNN = images, RNN/LSTM = sequences.'],
+'d2-3':['Q سؤال، K عنوان، V محتوى: السؤال يبحث عن العنوان المطابق ويأخذ المحتوى. BERT يفهم وGPT يكتب.','BERT understands, GPT generates.'],
+'d2-4':['ثلاث درجات: اسألي أفضل، ثم أعطيه مراجع (RAG)، ثم غيّري طبعه (Fine-tune).','Prompt → RAG → fine-tune.'],
+'d2-5':['RAG = امتحان بكتاب مفتوح. ROUGE للتلخيص وBLEU للترجمة.','RAG = open-book exam.'],
+'d3-0':['الاختبار ثلاث طبقات: وحدة، تكامل، ونموذج (يحرس جودة النموذج).','Unit, integration, model tests.'],
+'d3-1':['REST هو القياسي، GraphQL تطلبين ما تريدين، gRPC سريع للداخل. OAuth تفويض، JWT بطاقة موقّعة، مفتاح API هوية بسيطة.','REST default, GraphQL flexible, gRPC internal and fast.'],
+'d3-2':['Kafka سجل يُعاد قراءته، RabbitMQ ساعي بريد يوزّع المهام، وWebhook الجرس يرن عندك بدل أن تسألي.','Kafka = replayable log; webhook = push.'],
+'d3-3':['Docker كحاوية شحن: نفس المحتوى في كل ميناء.','Same container everywhere.'],
+'d4-0':['Feature store مطبخ واحد للتدريب والتقديم. Registry مكتبة إصدارات النماذج.','One feature definition; versioned models.'],
+'d4-1':['CI يختبر، CD يوصّل، CT يعيد التدريب.','CI tests, CD ships, CT retrains.'],
+'d4-2':['Canary كطائر المنجم يجرّب أولًا. Blue-Green بيتان ومفتاح واحد. Shadow ظل لا يراه أحد.','Canary = small %, Blue-Green = flip, Shadow = hidden copy.'],
+'d4-3':['Data drift: تغيّر الزبائن. Concept drift: تغيّر معنى سلوكهم. SLI تقيسين، SLO تستهدفين، SLA توقّعين عقدًا.','SLI measure, SLO target, SLA contract.'],
+'d4-4':['أرخص خفض للتكلفة: التخزين المؤقت. التكميم يصغّر الأرقام، والتقطير يعلّم طالبًا صغيرًا.','Cache first; quantize; distill.'],
+'d5-0':['القيد القانوني يحسم مكان التشغيل قبل أي ميزة أخرى.','Regulation decides where it runs.'],
+'d5-1':['البيانات كبيرة: توازي البيانات. النموذج كبير: توازي النموذج.','Big data → data parallel; big model → model parallel.'],
+'d5-2':['أفقي = أضيف أجهزة، رأسي = جهاز أضخم له سقف. Serverless للحمل الخفيف المتقطع.','Horizontal beats vertical for resilience.'],
+'d5-3':['RPO فيها P لـ Point: كم بيانات أخسر. RTO فيها T لـ Time: كم وقتًا أتوقف. البحيرة خام والمستودع منظم.','RPO = data, RTO = time.'],
+'d5-4':['اكتبي القيود، اشطبي المخالف، ثم اختاري الأرخص. عدد النسخ = الذروة ÷ إنتاجية النسخة.','Constraints → eliminate → cheapest.'],
+'d6-0':['حذف العمود الحساس لا يكفي: بدائله مثل الرمز البريدي تكشفه.','Proxies leak the sensitive attribute.'],
+'d6-1':['SHAP وLIME يشرحان قرارًا واحدًا. Model card بطاقة هوية للنموذج.','Explain one decision; document the model.'],
+'d6-2':['قبل التدريب: تسميم. بعد النشر: عدائي. نص مخفي في مستند: حقن.','Poisoning = training; adversarial = inference.'],
+'d6-3':['DP ضوضاء، Federated البيانات لا تتحرك، Homomorphic حساب على المشفّر.','Noise, local training, encrypted compute.'],
+'d6-4':['حفظ أسماء المبادئ السبعة بالنص. NIST: Govern ثم Map ثم Measure ثم Manage.','Learn official names word for word.'],
+'d7-0':['قبل النموذج: ما المشكلة؟ هل تكفي قاعدة بسيطة؟ هل يتحرك مؤشر الأعمال؟','Problem first, baseline second, KPI third.'],
+'d7-1':['CRISP-DM تبدأ بفهم الأعمال لا بالنموذج.','CRISP-DM starts with business.'],
+'d7-2':['الصدق أولًا: أفصحي عن التحيز ولا تخفيه من أجل الموعد.','Disclose, then mitigate.']
+};
+function extra(key){var h='';if(VIS[key])h+='<div class="vis">'+VIS[key][0]+'<div class="cap">'+VIS[key][1]+'</div></div>';
+  if(MN[key])h+='<div class="mn"><b>حيلة للتذكر</b>'+bi(MN[key][1],MN[key][0])+'</div>';return h}
+
+/* ---------- state & render ---------- */
+var tab='plan',curDomain='d1',cardIdx=0,cardFlip=false,quiz=null,cardSet='all';
+function CG(){return cardSet==='gov'?G.slice(GOVSTART):G}
+var DNAME={};D.forEach(function(d){DNAME[d.id]=d});
+
+function setMode(m){S.mode=m;save();document.body.className='m-'+m;$$('.langs button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===m)})}
+function totalLessons(){var n=0;D.forEach(function(d){n+=d.L.length});return n}
+function doneLessons(){return Object.keys(S.done).filter(function(k){return S.done[k]}).length}
+function updateCount(){
+  var now=new Date();var exam=new Date(2026,11,5);var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var d=Math.round((exam-t0)/864e5);
+  $('#days').textContent=d>0?d:(d===0?'اليوم':'0');
+  $('#daysLbl').innerHTML=d>0?'يوم على اختبار<br>5 ديسمبر':(d===0?'يوم الاختبار<br>بالتوفيق':'انتهى الموعد<br>5 ديسمبر');
+}
+
+function view(){
+  $$('nav .tab').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===tab)});
+  var v=$('#view');
+  if(tab==='plan')v.innerHTML=renderPlan();
+  else if(tab==='learn')v.innerHTML=renderLearn();
+  else if(tab==='cards')v.innerHTML=renderCards();
+  else if(tab==='quiz')v.innerHTML=renderQuiz();
+  else v.innerHTML=renderExam();
+}
+function go(t){tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}view();window.scrollTo(0,0)}
+
+function renderPlan(){
+  var tl=totalLessons(),dl=doneLessons();
+  var h='<h2>'+bi('Your 12-day plan to December 5','خطتك لـ 12 يومًا حتى 5 ديسمبر')+'</h2>';
+  h+='<div class="card"><div class="row" style="justify-content:space-between"><div><b>تقدم المذاكرة</b> <span class="muted">Lessons</span></div><div class="w">'+dl+' / '+tl+'</div></div><div class="prog" style="margin:10px 0 0"><i style="width:'+Math.round(dl/tl*100)+'%"></i></div></div>';
+  h+='<div class="card"><h3>'+bi('Domain weights: study in proportion','أوزان المحاور: ذاكري بحسب الوزن')+'</h3><div class="bars">';
+  D.forEach(function(d){h+='<button class="bar" data-goto="'+d.id+'"><div><div class="lbl"><b>'+d.n+'</b> · '+d.ar+'<span class="en" style="color:var(--muted);font-size:.85rem">'+d.en+'</span></div><div class="track"><div class="fill" style="width:'+(d.w/18*100)+'%"></div></div></div><span class="pc">'+d.w.toFixed(1)+'%</span></button>'});
+  h+='</div><p class="note" style="margin:10px 0 0">الأوزان من ملصق شارة مهندس الذكاء الاصطناعي. D4 هو الأعلى وزنًا.</p></div>';
+  var today=new Date();var ts=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  PLAN.forEach(function(p,i){
+    var cls='card day'+(p[0]===ts?' today':'')+(p[5]?' exam':'');
+    h+='<div class="'+cls+'"><div class="dt"><b>'+p[2]+'</b><small>'+p[3]+'</small></div><div><div class="muted" style="font-size:.88rem">'+p[1]+(p[0]===ts?' · اليوم':'')+(p[5]?' · يوم الاختبار':'')+'</div>';
+    p[4].forEach(function(t,j){var id='p'+i+'-'+j;var on=S.plan[id];h+='<label class="chk'+(on?' done':'')+'"><input type="checkbox" data-plan="'+id+'"'+(on?' checked':'')+'><span class="tx">'+bi(t[0],t[1])+'</span></label>'});
+    h+='</div></div>';
+  });
+  h+='<p class="note">الخطة تقدّر 2 إلى 3 ساعات يوميًا. إن تأخرتِ يومًا، اضغطي أيامًا من D5 وD7 لأن وزنهما أقل.</p>';
+  return h;
+}
+
+function renderLearn(){
+  var h='<h2>'+bi('Study by domain','المذاكرة بحسب المحور')+'</h2><div class="row" style="margin-bottom:14px">';
+  h+='<button class="pill" data-dom="primer" aria-pressed="'+(curDomain==='primer')+'">ابدئي من الصفر</button>';
+  D.forEach(function(d){h+='<button class="pill" data-dom="'+d.id+'" aria-pressed="'+(curDomain===d.id)+'">'+d.n+' · '+d.w.toFixed(1)+'%</button>'});
+  h+='</div>';
+  if(curDomain==='primer'){
+    h+='<p class="muted">'+bi('Never studied AI? Start here. Six short ideas make the rest easy.','لم تدرسي الذكاء الاصطناعي؟ ابدئي هنا. ست أفكار قصيرة تسهّل كل ما بعدها.')+'</p>';
+    PRIMER.forEach(function(p){h+='<details class="card lesson" open><summary><span>'+bi(p[0],p[1])+'</span></summary><div class="pts" style="padding:0;margin-top:8px">'+bi(p[2][0],p[2][1])+'</div></details>'});
+    h+='<button class="btn" data-dom="d1">ابدئي المحور D1</button>';
+    return h;
+  }
+  var d=DNAME[curDomain];
+  h+='<div class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div>'+bi(d.en,d.ar)+'</div><span class="w">'+d.w.toFixed(1)+'%</span></div>'+(d.star?'<p class="note" style="margin:6px 0 0">أعلى المحاور وزنًا. رتّبي وقتك ليكون الأكثر هنا.</p>':'')+'</div>';
+  d.L.forEach(function(l,i){
+    var key=d.id+'-'+i;var dn=S.done[key];
+    h+='<details class="card lesson"><summary><span>'+bi(l.t[0],l.t[1])+(dn?'<span class="tag">تمت</span>':'')+'</span></summary><ul class="pts">';
+    l.p.forEach(function(p){h+='<li>'+bi(p[0],p[1])+'</li>'});
+    h+='</ul>'+extra(key)+'<div class="trap"><b>فخ الاختبار · Exam tip</b>'+bi(l.x[0],l.x[1])+'</div>';
+    h+='<div class="row" style="margin-top:12px"><label class="chk" style="padding:0"><input type="checkbox" data-done="'+key+'"'+(dn?' checked':'')+'><span>أنهيت هذا الدرس</span></label><button class="btn ghost" data-ask="'+key+'">انسخي سؤالًا لمدرّبك</button></div></details>';
+  });
+  h+='<div class="row"><button class="btn" data-quizdom="'+d.id+'">اختبار '+d.n+'</button></div>';
+  return h;
+}
+
+function renderCards(){
+  var L=CG();if(cardIdx>=L.length)cardIdx=0;var g=L[cardIdx];
+  var h='<h2>'+bi('Glossary flashcards','بطاقات المصطلحات')+'</h2><div class="row" style="margin-bottom:10px"><button class="pill" data-cset="all" aria-pressed="'+(cardSet==='all')+'">كل المصطلحات ('+G.length+')</button><button class="pill" data-cset="gov" aria-pressed="'+(cardSet==='gov')+'">الحوكمة والأمن بالنص ('+(G.length-GOVSTART)+')</button></div><p class="muted">اضغطي على البطاقة لقلبها.</p>';
+  h+='<div class="prog"><i style="width:'+((cardIdx+1)/L.length*100)+'%"></i></div>';
+  h+='<div class="card flash" id="flash" tabindex="0" role="button" aria-label="اقلبي البطاقة">';
+  if(!cardFlip)h+='<div class="term">'+g[0]+'</div><div class="muted">'+(cardIdx+1)+' / '+L.length+'</div>';
+  else h+='<div style="font-size:1.35rem;font-weight:700">'+g[1]+'</div><div class="en" style="text-align:center">'+g[2]+'</div><div class="ar">'+g[3]+'</div>';
+  h+='</div><div class="row" style="justify-content:center"><button class="btn ghost" id="cprev">السابق</button><button class="btn ghost" id="cshuf">ترتيب عشوائي</button><button class="btn" id="cnext">التالي</button></div>';
+  return h;
+}
+
+/* ---------- question bank (core + imported banks loaded from bank.json) ---------- */
+var BANK=[],bankState='loading',QALL=[];
+var SRC={core:'تدريب المساعد',140:'بنك 140',60:'بنك 60',ex2:'تمهيدي',docx:'محاكاة'};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function buildAll(){
+  var core=QCORE.map(function(q,i){return {id:'c'+i,src:'core',d:q[0],q:q[1],o:q[2],a:[q[3]],need:1,e:q[5],ea:q[4],shuf:true}});
+  QALL=core.concat(BANK);
+}
+function sameSet(a,b){if(a.length!==b.length)return false;var s=a.slice().sort().join(),t=b.slice().sort().join();return s===t}
+function pickN(arr,n){return shuffle(arr).slice(0,n)}
+function startQuiz(filter){
+  var pool;
+  if(filter==='wrong')pool=QALL.filter(function(q){return S.wrong[q.id]});
+  else if(filter==='mock'){
+    pool=[];var base=QALL.filter(function(q){return q.d!=='mix'});var N=30,tot=0,alloc=[];
+    D.forEach(function(d){var x=d.w*N/100;alloc.push([d,Math.floor(x),x-Math.floor(x)]);tot+=Math.floor(x)});
+    alloc.sort(function(a,b){return b[2]-a[2]});for(var i=0;tot<N&&i<alloc.length;i++,tot++)alloc[i][1]++;
+    alloc.forEach(function(a){pool=pool.concat(pickN(base.filter(function(q){return q.d===a[0].id}),a[1]))});
+  }
+  else if(filter==='b140'||filter==='b60'||filter==='ex2'){var s=filter==='b140'?'140':filter==='b60'?'60':'ex2';pool=pickN(QALL.filter(function(q){return q.src===s}),20)}
+  else pool=pickN(QALL.filter(function(q){return q.d===filter}),15);
+  if(!pool.length){quiz={empty:true};return}
+  quiz={filter:filter,items:shuffle(pool).map(function(q){
+    var o=q.o.map(function(t,k){return {t:t,ok:q.a.indexOf(k)>-1}});
+    return {q:q,opts:q.shuf?shuffle(o):o}}),pos:0,score:0,by:{},answered:false,sel:[],finished:false};
+  quiz.timed=(filter==='mock'||filter==='b140'||filter==='b60');quiz.t0=Date.now();quiz.limit=quiz.items.length*90;
+}
+function fmtT(sec){var n=sec<0;sec=Math.abs(Math.round(sec));var m=Math.floor(sec/60),r=sec%60;return (n?'-':'')+m+':'+(r<10?'0':'')+r}
+function remaining(){return quiz.limit-(Date.now()-quiz.t0)/1000}
+setInterval(function(){var e=$('#tmr');if(e&&quiz&&quiz.timed&&!quiz.finished){var r=remaining();e.textContent=fmtT(r);e.style.color=r<0?'var(--bad)':''}},1000);
+function renderQuiz(){
+  if(!quiz){
+    var h='<h2>'+bi('Practice quizzes','الاختبارات التدريبية')+'</h2>';
+    h+='<p class="muted">الأسئلة بالإنجليزية كما في الاختبار الحقيقي. '+QALL.length+' سؤالًا متاحًا الآن'+(bankState==='loading'?' (جارٍ تحميل البنوك...)':bankState==='err'?'. تعذر تحميل البنوك الإضافية، والأسئلة الأساسية فقط تعمل.':'')+'. بعض الأسئلة تطلب اختيار إجابتين أو ثلاث (Select TWO / THREE) وتُحتسب صحيحة فقط إذا طابقت المجموعة كاملة.</p>';
+    var wc=Object.keys(S.wrong).filter(function(k){return S.wrong[k]}).length;
+    h+='<div style="display:grid;gap:10px">';
+    h+='<button class="card" style="text-align:start;margin:0;border-color:var(--accent)" data-quizdom="mock"><b>محاكاة الاختبار · Weighted mock (30)</b><div class="note">أسئلة سيناريو موزعة بحسب أوزان المحاور السبعة، بمؤقت 90 ثانية للسؤال</div></button>';
+    D.forEach(function(d){var c=QALL.filter(function(q){return q.d===d.id}).length;var b=S.best[d.id];h+='<button class="card" style="text-align:start;margin:0" data-quizdom="'+d.id+'"><div class="row" style="justify-content:space-between"><b>'+d.n+' · '+d.ar+'</b><span class="w">'+c+' Q</span></div><div class="en muted" style="font-size:.88rem">'+d.en+'</div>'+(b!=null?'<div class="note">أفضل نتيجة: '+b+'%</div>':'')+'</button>'});
+    var n140=QALL.filter(function(q){return q.src==='140'}).length,n60=QALL.filter(function(q){return q.src==='60'}).length,ne=QALL.filter(function(q){return q.src==='ex2'}).length;
+    if(n140)h+='<button class="card" style="text-align:start;margin:0" data-quizdom="b140"><b>بنك الـ140 · 20 سؤالًا عشوائيًا</b><div class="note">'+n140+' سؤالًا متقدمًا، بعضها إجابتان أو ثلاث</div></button>';
+    if(n60)h+='<button class="card" style="text-align:start;margin:0" data-quizdom="b60"><b>بنك الـ60 · 20 سؤالًا عشوائيًا</b><div class="note">'+n60+' سؤال سيناريو بجداول</div></button>';
+    if(ne)h+='<button class="card" style="text-align:start;margin:0" data-quizdom="ex2"><b>تمهيدي سريع · 20 سؤالًا</b><div class="note">'+ne+' سؤالًا سهلًا لتثبيت المفاتيح والفروق، مناسب لليوم الأول</div></button>';
+    h+='<button class="card" style="text-align:start;margin:0" data-quizdom="wrong"><b>أخطائي · My mistakes</b><div class="note">'+wc+' سؤال للمراجعة</div></button></div>';
+    return h;
+  }
+  if(quiz.empty)return '<div class="card"><p>لا توجد أسئلة هنا بعد. أحسنتِ!</p><button class="btn" id="qback">رجوع</button></div>';
+  if(quiz.finished){
+    var pct=Math.round(quiz.score/quiz.items.length*100);
+    var used=((quiz.t1||Date.now())-quiz.t0)/1000;var h2='<div class="card"><h2>النتيجة: '+quiz.score+' / '+quiz.items.length+' ('+pct+'%)</h2>'+(quiz.timed?'<p>الوقت: '+fmtT(used)+' دقيقة، بمتوسط '+Math.round(used/quiz.items.length)+' ثانية للسؤال (الهدف 90).</p>':'')+'<p>'+(pct>=85?'مستوى خبير. ثبّتي ما تعلمتِه.':pct>=75?'مستوى جيد. راجعي أخطاءك وأعيدي.':'استمري. افتحي الدروس المرتبطة بالأخطاء ثم أعيدي.')+'</p>';
+    var keys=Object.keys(quiz.by);if(keys.length>1){h2+='<div class="scroll"><table><tr><th>المحور</th><th>صحيح</th></tr>';keys.forEach(function(k){h2+='<tr><td>'+(DNAME[k]?DNAME[k].n+' · '+DNAME[k].ar:'أسئلة مختلطة')+'</td><td>'+quiz.by[k][0]+' / '+quiz.by[k][1]+'</td></tr>'});h2+='</table></div>'}
+    h2+='<div class="row" style="margin-top:12px"><button class="btn" id="qagain">أعيدي</button><button class="btn ghost" id="qback">كل الاختبارات</button></div></div>';return h2;
+  }
+  var it=quiz.items[quiz.pos],q=it.q;
+  var h3='<div class="prog"><i style="width:'+(quiz.pos/quiz.items.length*100)+'%"></i></div><div class="card"><div class="row" style="justify-content:space-between"><span class="w">'+(DNAME[q.d]?DNAME[q.d].n:SRC[q.src])+'</span><span class="note">'+(quiz.timed?'<span class="w" id="tmr">'+fmtT(remaining())+'</span> ':'')+(quiz.pos+1)+' / '+quiz.items.length+'</span></div>';
+  if(q.need>1)h3+='<p class="need">اختاري '+q.need+' إجابات · Select '+(q.need===2?'TWO':'THREE')+'</p>';
+  h3+='<div class="qtext" dir="ltr">'+esc(q.q)+'</div>';
+  it.opts.forEach(function(o,k){var c='opt';var chosen=quiz.sel.indexOf(k)>-1;
+    if(quiz.answered){if(o.ok)c+=' ok';else if(chosen)c+=' no'}else if(chosen)c+=' sel';
+    h3+='<button class="'+c+'" data-opt="'+k+'"'+(quiz.answered?' disabled':'')+'>'+String.fromCharCode(65+k)+'. '+esc(o.t)+'</button>'});
+  if(!quiz.answered&&q.need>1)h3+='<button class="btn" id="qconfirm"'+(quiz.sel.length!==q.need?' disabled':'')+'>تأكيد ('+quiz.sel.length+'/'+q.need+')</button>';
+  if(quiz.answered){
+    var good=quiz.last;
+    h3+='<div class="expl">'+(good?'<b style="color:var(--good)">صحيح</b>':'<b style="color:var(--bad)">غير صحيح</b>');
+    if(q.ea)h3+=bi(esc(q.e),q.ea);else if(q.e)h3+='<div class="enraw" dir="ltr">'+esc(q.e)+'</div>';else h3+='<div>الإجابة الصحيحة مظلّلة بالأخضر.</div>';
+    h3+='</div><button class="btn" id="qnext">'+(quiz.pos+1<quiz.items.length?'التالي':'عرض النتيجة')+'</button>';
+  }
+  h3+='</div>';return h3;
+}
+function gradeQuiz(){
+  var it=quiz.items[quiz.pos],q=it.q;
+  var chosen=quiz.sel.slice();var correct=[];it.opts.forEach(function(o,k){if(o.ok)correct.push(k)});
+  var ok=sameSet(chosen,correct);quiz.answered=true;quiz.last=ok;
+  var dd=q.d;quiz.by[dd]=quiz.by[dd]||[0,0];quiz.by[dd][1]++;
+  if(ok){quiz.score++;quiz.by[dd][0]++;delete S.wrong[q.id]}else{S.wrong[q.id]=true}
+  save();
+}
+
+function renderExam(){
+  var h='<h2>'+bi('Exam strategy','استراتيجية الاختبار')+'</h2>';
+  h+='<div class="card"><h3>'+bi('What is confirmed about the exam','ما هو مؤكد عن الاختبار')+'</h3><div class="scroll"><table><tr><th>البند</th><th>الحالة</th></tr>'+
+   '<tr><td>120 سؤال اختيار من متعدد، بالإنجليزية، 3 ساعات، حضوري مراقَب</td><td>مذكور في الإنفوغرافيك الرسمي للشارة</td></tr>'+
+   '<tr><td>التقييم النهائي: الاختبار 50% + الخبرة 20% + التعليم 20% + الشهادات 10%</td><td>مذكور في الإنفوغرافيك الرسمي</td></tr>'+
+   '<tr><td>ثلاثة مستويات: Assistant وAssociate وExpert، والاختبار وحده لا يحدد المستوى</td><td>مذكور في الإنفوغرافيك الرسمي</td></tr>'+
+   '<tr><td>أوزان المحاور السبعة</td><td>رسمي. D5 يظهر 12.7% في الإنفوغرافيك و12.6% في ملصق آخر</td></tr>'+
+   '<tr><td>أسئلة سيناريو طويلة، بلا برمجة وحسابات معقدة، والتشغيل (النشر والمراقبة والتوسع والتكلفة والأمان) أثقل من النظري</td><td>تقارير من اختبروا (لينا وسارة ومحمد)</td></tr>'+
+   '<tr><td>محمد ذكر 140 سؤالًا بدل 120</td><td>تعارض. خططي للأسوأ: حوالي 90 ثانية للسؤال</td></tr>'+
+   '<tr><td>درجة النجاح ودرجات المستويات</td><td>لم تُعلن</td></tr></table></div>'+
+   '<p class="note">موعد الدفعة الأولى في الإنفوغرافيك “الأسبوع الأخير من يوليو 2026”. أما موعدك 5 ديسمبر فمن إفادتك، وتحققي منه من المنصة.</p></div>';
+  h+='<div class="card"><h3>'+bi('The 4-step scenario method','طريقة حل السيناريو بأربع خطوات')+'</h3><ol class="pts">'+
+   '<li>'+bi('Read the last line first: what is actually being asked?','اقرئي السطر الأخير أولًا: ما المطلوب فعليًا؟')+'</li>'+
+   '<li>'+bi('Extract the requirements and the deciding constraint (cost, latency, privacy, regulation, little data) before looking at the options.','استخرجي المتطلبات والقيد الحاسم (تكلفة أو زمن أو خصوصية أو لوائح أو بيانات قليلة) قبل النظر إلى الخيارات.')+'</li>'+
+   '<li>'+bi('Eliminate options that are technically correct but do not solve this problem, and any option that meets only two of three requirements.','احذفي الخيارات الصحيحة تقنيًا لكنها لا تحل هذه المشكلة، وأي خيار يحقق متطلبين من ثلاثة.')+'</li>'+
+   '<li>'+bi('Choose the simplest, lowest-risk, lowest-cost option that satisfies every requirement.','اختاري الأبسط والأقل مخاطرة وتكلفة والذي يحقق كل المتطلبات.')+'</li></ol></div>';
+  h+='<div class="card"><h3>'+bi('Question patterns reported by test takers','أنماط الأسئلة التي ذكرها من اختبروا')+'</h3><ol class="pts">'+
+   '<li>'+bi('<b>Problem solving</b> (the largest group): a scenario with a failure, pick the most suitable fix.','<b>حل المشكلات</b> (الأكبر): سيناريو فيه عطل والمطلوب أنسب حل.')+'</li>'+
+   '<li>'+bi('<b>Requirements matching</b> (the hardest): scenario, three requirements (speed, quality, accuracy), a spec table, then pick the option meeting all three at the lowest cost.','<b>مطابقة المتطلبات</b> (الأصعب): سيناريو وثلاثة متطلبات (سرعة وجودة ودقة) وجدول مواصفات، والمطلوب الخيار الذي يحقق الثلاثة بأقل تكلفة.')+'</li>'+
+   '<li>'+bi('<b>Governance and compliance</b>: which standard or principle was violated? Option names are close, so learn the official names word for word.','<b>الحوكمة والامتثال</b>: أي معيار أو مبدأ خُولف؟ الخيارات متقاربة فاحفظي الأسماء الرسمية بالنص.')+'</li>'+
+   '<li>'+bi('<b>Cost analysis</b>: 3 to 4 questions with expense tables or charts: is it reasonable, where is the waste, what to reduce?','<b>تحليل التكاليف</b>: 3 إلى 4 أسئلة بجداول أو مخططات مصاريف: هل هي منطقية وأين الهدر وما الذي يُقلَّص؟')+'</li></ol>'+
+   '<p class="muted" style="margin:10px 0 4px"><b>الأكثر تكرارًا:</b> <span dir="ltr">Latency (ms), Replicas, Cost, API, Encryption, PDPL and data retention, LLM, RAG, Tokenizer, Precision</span></p>'+
+   '<p class="muted" style="margin:0">مواضيع تكررت: RAG مع مستندات تتحدث دوريًا داخل مساعد، وكشف الاحتيال البنكي.</p></div>';
+  h+='<div class="card"><h3>'+bi('Advice from people who sat the exam','نصائح ممن اختبروا')+'</h3><ul class="pts">'+
+   '<li>'+bi('Do not memorize definitions. Be able to choose between two solutions on cost, latency and accuracy together.','لا تحفظي التعريفات. كوني قادرة على المفاضلة بين حلين بحسب التكلفة والزمن والدقة معًا.')+'</li>'+
+   '<li>'+bi('For each topic know how it applies in real life, when it is used and what it is for.','لكل موضوع اعرفي كيف يُطبَّق في الواقع ومتى يُستخدم وما الهدف منه.')+'</li>'+
+   '<li>'+bi('Practise scenarios, especially Deployment, which was a large share of the exam.','تدرّبي على السيناريوهات وخصوصًا النشر Deployment فنسبته كبيرة.')+'</li>'+
+   '<li>'+bi('Fraud example: FP costs $10, FN costs $7,000, so choose the highest recall.','مثال الاحتيال: تكلفة FP عشرة دولارات وFN سبعة آلاف، فاختاري أعلى Recall.')+'</li>'+
+   '<li>'+bi('Time: about 90 seconds per question. If one takes over two minutes, flag it and return. Do not stall on one table question.','الوقت: حوالي 90 ثانية للسؤال. إن تجاوز دقيقتين علّميه وارجعي له، ولا تعلقي في سؤال جدول واحد.')+'</li>'+
+   '<li>'+bi('“Select TWO / THREE”: judge each option on its own against the scenario.','“اختاري اثنين/ثلاثة”: قيّمي كل خيار مستقلًا مقابل السيناريو.')+'</li></ul></div>';
+  h+='<div class="card"><h3>'+bi('Learn word for word: Saudi and global governance names','احفظيها بالنص: أسماء الحوكمة السعودية والعالمية')+'</h3><div class="scroll"><table><tr><th>Item</th><th>Exact wording</th></tr>'+
+   '<tr><td class="e">SDAIA AI Ethics Principles (7)</td><td class="e">Fairness · Privacy and Security · Humanity · Social and Environmental Benefits · Reliability and Safety · Transparency and Explainability · Accountability and Responsibility</td></tr>'+
+   '<tr><td class="e">AI system lifecycle phases (4)</td><td class="e">Plan and Design → Prepare Input Data → Build and Validate → Deploy and Monitor</td></tr>'+
+   '<tr><td class="e">Developer vs owner</td><td class="e">Developer builds systems using data and algorithms. Owner applies or uses systems to achieve goals.</td></tr>'+
+   '<tr><td class="e">National AI Risk Management Framework</td><td class="e">Advisory framework: identify, assess, treat and continuously monitor AI risks</td></tr>'+
+   '<tr><td class="e">NIST AI RMF (4)</td><td class="e">Govern · Map · Measure · Manage</td></tr>'+
+   '<tr><td class="e">EU AI Act risk tiers</td><td class="e">Unacceptable · High · Limited · Minimal</td></tr>'+
+   '<tr><td class="e">Saudi data law</td><td class="e">Personal Data Protection Law (PDPL)</td></tr></table></div><p class="note">راجعي النصوص من مواقع سدايا الرسمية لأن الخيارات تختلف بكلمة.</p></div>';
+  h+='<div class="card"><h3>'+bi('Words that flip the answer','كلمات تقلب الإجابة')+'</h3><div class="scroll"><table><tr><th>Word</th><th>What to do</th></tr>'+
+   '<tr><td class="e">MOST appropriate / BEST</td><td>اختاري الأنسب للسيناريو لا مجرد حل صحيح</td></tr>'+
+   '<tr><td class="e">FIRST</td><td>التشخيص والقياس قبل العلاج غالبًا</td></tr>'+
+   '<tr><td class="e">PRIMARY</td><td>السبب أو الهدف الرئيسي ولا تنشغلي بالثانوي</td></tr>'+
+   '<tr><td class="e">LEAST likely</td><td>اعكسي تفكيرك</td></tr>'+
+   '<tr><td class="e">EXCEPT / NOT</td><td>ثلاثة صحيحة وواحد غير صحيح، انتبهي لئلا تختاري العكس</td></tr>'+
+   '<tr><td class="e">without retraining</td><td>يميل إلى RAG أو الإعدادات</td></tr>'+
+   '<tr><td class="e">frequently updated knowledge</td><td>RAG غالبًا</td></tr></table></div></div>';
+  h+='<div class="card"><h3>'+bi('If you see this, think that','إذا رأيتِ هذا فكّري في هذا')+'</h3><div class="scroll"><table><tr><th>Scenario clue</th><th>Answer</th><th>بالعربي</th></tr>';
+  DEC.forEach(function(r){h+='<tr><td class="e">'+r[0]+'</td><td class="e" style="color:var(--accent)">'+r[1]+'</td><td>'+r[2]+'</td></tr>'});
+  h+='</table></div></div>';
+  h+='<div class="card"><h3>'+bi('Metric and capacity cheat sheet','ورقة غش المقاييس والسعة')+'</h3><div class="scroll"><table><tr><th>Item</th><th>Formula / meaning</th></tr><tr><td class="e">Precision</td><td class="e">TP / (TP + FP)</td></tr><tr><td class="e">Recall</td><td class="e">TP / (TP + FN)</td></tr><tr><td class="e">F1</td><td class="e">2PR / (P + R)</td></tr><tr><td class="e">ROI</td><td class="e">(benefit − cost) / cost</td></tr><tr><td class="e">Replicas needed</td><td class="e">peak req/s ÷ req/s per replica at the SLO-compliant setting, then add headroom</td></tr><tr><td class="e">GPU memory</td><td class="e">weights + runtime + (KV cache per session × sessions) + reserve</td></tr></table></div></div>';
+  h+='<div class="card"><h3>'+bi('Study with your tutor','ذاكري مع مدرّبك')+'</h3><p>اضغطي “انسخي سؤالًا لمدرّبك” داخل أي درس والصقيه في المحادثة، وسيشرح لك Claude من الصفر مع مثال وأسئلة تدريب.</p></div>';
+  h+='<p class="note">الأسئلة المضافة في الاختبارات مأخوذة من ملفات التدريب التي أرسلتِها (بنك 140 وبنك 60 وأسئلة عمر)، والتجارب من لينا وسارة ومحمد. استخدميها لمذاكرتك الخاصة ولا تنشري الصفحة علنًا.</p>';
+  return h;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var t=e.target.closest('button,summary,label,input');if(!t)return;
+  if(t.dataset&&t.dataset.tab){go(t.dataset.tab);return}
+  if(t.dataset&&t.dataset.m){setMode(t.dataset.m);return}
+  if(t.dataset&&t.dataset.goto){curDomain=t.dataset.goto;go('learn');return}
+  if(t.dataset&&t.dataset.dom){curDomain=t.dataset.dom;view();window.scrollTo(0,0);return}
+  if(t.dataset&&t.dataset.quizdom){startQuiz(t.dataset.quizdom);tab='quiz';view();window.scrollTo(0,0);return}
+  if(t.dataset&&t.dataset.ask){var p=t.dataset.ask.split('-');var d=DNAME[p[0]];var l=d.L[+p[1]];copyText('اشرحي لي بالعربي مع المصطلحات بالإنجليزية موضوع: '+l.t[0]+' ('+l.t[1]+') من محور '+d.en+'. اشرحه كأنني مبتدئة، مع مثال بسيط، ثم اختبرني بثلاثة أسئلة سيناريو بأسلوب اختبار شارة مهندس الذكاء الاصطناعي من سدايا.',t);return}
+  if(t.dataset&&t.dataset.cset){cardSet=t.dataset.cset;cardIdx=0;cardFlip=false;view();return}
+  if(t.id==='cnext'){cardIdx=(cardIdx+1)%CG().length;cardFlip=false;view();return}
+  if(t.id==='cprev'){cardIdx=(cardIdx-1+CG().length)%CG().length;cardFlip=false;view();return}
+  if(t.id==='cshuf'){cardIdx=Math.floor(Math.random()*CG().length);cardFlip=false;view();return}
+  if(t.id==='qback'){quiz=null;view();return}
+  if(t.id==='qagain'){startQuiz(quiz.filter);view();return}
+  if(t.dataset&&t.dataset.opt!==undefined&&quiz&&!quiz.answered){
+    var k=+t.dataset.opt;var qq=quiz.items[quiz.pos].q;
+    if(qq.need===1){quiz.sel=[k];gradeQuiz();}
+    else{var ix=quiz.sel.indexOf(k);if(ix>-1)quiz.sel.splice(ix,1);else if(quiz.sel.length<qq.need)quiz.sel.push(k)}
+    view();return}
+  if(t.id==='qconfirm'&&quiz&&!quiz.answered){gradeQuiz();view();return}
+  if(t.id==='qnext'){
+    if(quiz.pos+1<quiz.items.length){quiz.pos++;quiz.answered=false;quiz.sel=[]}
+    else{quiz.finished=true;quiz.t1=Date.now();if(DNAME[quiz.filter]){var pc=Math.round(quiz.score/quiz.items.length*100);if(S.best[quiz.filter]==null||pc>S.best[quiz.filter])S.best[quiz.filter]=pc;save()}}
+    view();window.scrollTo(0,0);return}
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.dataset.plan){S.plan[t.dataset.plan]=t.checked;save();t.closest('.chk').classList.toggle('done',t.checked)}
+  if(t.dataset.done){S.done[t.dataset.done]=t.checked;save()}
+});
+document.addEventListener('click',function(e){var f=e.target.closest('#flash');if(f){cardFlip=!cardFlip;view()}});
+document.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.id==='flash'){e.preventDefault();cardFlip=!cardFlip;view();var f=$('#flash');if(f)f.focus()}});
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(['plan','learn','cards','quiz','exam'].indexOf(h)>-1&&h!==tab){tab=h;view()}});
+
+buildAll();
+fetch('bank.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){BANK=j;bankState='ok';buildAll();if(tab==='quiz'&&!quiz)view()}).catch(function(){bankState='err';if(tab==='quiz'&&!quiz)view()});
+setMode(S.mode||'both');updateCount();
+var h0=location.hash.slice(1);if(['plan','learn','cards','quiz','exam'].indexOf(h0)>-1)tab=h0;
+view();
+
+/* ---------- visitor counter (GoatCounter public counter) ---------- */
+(function(){
+  var GC='https://sdaia-coach.goatcounter.com';
+  function setv(u,t){try{$('#visU b').textContent=u;$('#visT b').textContent=t}catch(e){}}
+  function load(){
+    fetch(GC+'/counter/TOTAL.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()})
+      .then(function(j){setv(j.count_unique||j.count||'0',j.count||'0')})
+      .catch(function(){setv('—','—')});
+  }
+  load();
+  /* refresh after our own hit has been recorded */
+  setTimeout(load,2500);
+})();
+</script>
+<script data-goatcounter="https://sdaia-coach.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
